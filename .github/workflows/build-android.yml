@@ -28,17 +28,18 @@ jobs:
       - name: Create Android project files
         run: flutter create --platforms=android --project-name=nutria .
 
-      - name: Add Internet Permission
+      - name: Configure Android NDK and Permissions
         run: |
+          # Add Internet Permission
           if [ -f android/app/src/main/AndroidManifest.xml ]; then
             sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
-          else
-            echo "AndroidManifest.xml not found!"
-            exit 1
           fi
 
-      - name: Debug - List Android files
-        run: ls -R android
+          # Set NDK Version to 27.0.12077973
+          if [ -f android/app/build.gradle.kts ]; then
+            sed -i 's/ndkVersion = .*/ndkVersion = "27.0.12077973"/' android/app/build.gradle.kts || \
+            sed -i '/android {/a \    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
+          fi
 
       - name: Build APK
         run: flutter build apk --release
