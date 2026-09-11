@@ -16,110 +16,114 @@ String _canonical(String input){
   return words.join('|');
 }
 
-/// Heuristic analysis for meals not in the catalog
-MealFeedback _analyzeByComposition(String input) {
-  final words = normalizeMealText(input).split(' ').where((w)=>w.isNotEmpty).toSet();
-
+/// Detailed analysis of each ingredient
+MealItemAnalysis _analyzeItem(String item) {
   const carbos = {'arroz', 'macarrao', 'batata', 'pao', 'tapioca', 'cuscuz', 'farofa', 'mandioca', 'milho', 'aveia', 'massa'};
   const proteins = {'carne', 'frango', 'peixe', 'ovo', 'feijao', 'lentilha', 'grao-de-bico', 'queijo', 'leite', 'soja', 'tofu'};
   const fibers = {'salada', 'legumes', 'verduras', 'brocolis', 'alface', 'cenoura', 'abobrinha', 'tomate', 'fruta', 'banana', 'maca', 'laranja', 'espinafre'};
-
-  // Alimentos ultraprocessados ou "não confiáveis"
   const processed = {
-    'miojo': 'Este alimento é ultraprocessado, rico em sódio e aditivos químicos, não sendo uma fonte confiável de nutrição.',
-    'salsicha': 'Alimento com alto índice de processamento e conservantes, deve ser evitado.',
-    'nugget': 'Produto ultraprocessado com baixo valor nutricional e alta quantidade de gorduras saturadas.',
-    'refrigerante': 'Contém excesso de açúcares e corantes, prejudicando a saúde metabólica.',
-    'biscoito': 'Geralmente rico em farinha refinada e gorduras trans, oferecendo pouca nutrição real.',
-    'salgadinho': 'Produto ultraprocessado com excesso de sódio e realçadores de sabor artificiais.',
+    'miojo': 'Ultraprocessado: rico em sódio e aditivos.',
+    'salsicha': 'Ultraprocessado: alto índice de conservantes.',
+    'nugget': 'Ultraprocessado: baixo valor nutricional.',
+    'refrigerante': 'Açúcar em excesso e corantes.',
+    'biscoito': 'Farinha refinada e gordura trans.',
+    'salgadinho': 'Excesso de sódio e realçadores artificiais.',
   };
 
-  // 1. Priority: Check for processed foods first
-  for (var item in processed) {
-    if (words.contains(item.key)) {
-      return MealFeedback(
-        'Alerta de Ultraprocessado',
-        'important',
-        item.value,
-        'Substitua este item por comida de verdade (alimentos in natura) para melhorar sua saúde.'
-      );
-    }
+  if (processed.containsKey(item)) {
+    return MealItemAnalysis(name: item, type: 'processed', isWarning: true, detail: processed[item]!);
   }
-
-  bool hasCarb = words.any((w) => carbos.contains(w));
-  bool hasProtein = words.any((w) => proteins.contains(w));
-  bool hasFiber = words.any((w) => fibers.contains(w));
-
-  if (hasCarb && hasProtein && hasFiber) {
-    return const MealFeedback(
-      'Refeição Equilibrada',
-      'positive',
-      'Sua refeição contém carboidratos para energia, proteínas para os músculos e fibras para a saúde digestiva.',
-      'Continue variando as cores dos vegetais e as fontes de proteína.'
-    );
-  } else if (!hasProtein) {
-    return const MealFeedback(
-      'Falta Proteína',
-      'attention',
-      'Sua refeição tem energia, mas falta uma fonte de proteína (como ovo, carne ou leguminosas) para garantir a saciedade e manutenção muscular.',
-      'Tente adicionar um ovo, frango ou feijão para equilibrar o prato.'
-    );
-  } else if (!hasFiber) {
-    return const MealFeedback(
-      'Faltam Fibras',
-      'attention',
-      'Você tem a base de energia e proteína, mas faltam vegetais ou frutas. Fibras são essenciais para o funcionamento do intestino e controle da glicemia.',
-      'Adicione uma porção de salada, legumes ou uma fruta após a refeição.'
-    );
-  } else if (!hasCarb) {
-    return const MealFeedback(
-      'Pouco Carboidrato',
-      'information',
-      'Sua refeição é rica em nutrientes e proteínas, mas tem poucos carboidratos. Dependendo do seu objetivo, você pode sentir fome mais rápido.',
-      'Se sentir cansaço, adicione uma fonte de carbo complexo como arroz integral ou batata doce.'
-    );
-  } else {
-    return const MealFeedback(
-      'Análise Incompleta',
-      'information',
-      'Não conseguimos identificar grupos nutricionais claros nesta combinação.',
-      'Tente descrever a refeição com mais detalhes (ex: "frango com salada").'
-    );
+  if (proteins.contains(item)) {
+    return const MealItemAnalysis(name: 'Proteína', type: 'protein', isWarning: false, detail: 'Essencial para músculos e saciedade.');
   }
+  if (carbos.contains(item)) {
+    return const MealItemAnalysis(name: 'Carboidrato', type: 'carb', isWarning: false, detail: 'Fonte primária de energia para o corpo.');
+  }
+  if (fibers.contains(item)) {
+    return const MealItemAnalysis(name: 'Fibra', type: 'fiber', isWarning: false, detail: 'Melhora a digestão e controla a glicemia.');
+  }
+  return MealItemAnalysis(name: item, type: 'unknown', isWarning: false, detail: 'Alimento identificado.');
 }
 
-MealFeedback? findMealFeedbackSmart(String input) {
-  final catalog = FeedbackService().allFeedbacks;
-
-  // 1. Try exact/close match in catalog
-  // We normalize both input and catalog keys for a fair comparison
+/// Main analysis engine
+MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
   final normalizedInput = normalizeMealText(input);
+  final words = normalizedInput.split(' ').where((w)=>w.isNotEmpty).toList();
 
-  // Check for exact matches in the fetched catalog
+  // 1. Try Catalog Match first (Supabase)
+  final catalog = FeedbackService().allFeedbacks;
+  MealFeedback? catalogFeedback;
+
   if (catalog.containsKey(normalizedInput)) {
-    return catalog[normalizedInput];
-  }
-
-  // Partial matching: check if the input contains a catalog entry
-  MealFeedback? best;
-  var bestScore = 0.0;
-
-  for (final entry in catalog.entries) {
-    final candidate = entry.key.split(' ').toSet();
-    final inputWords = normalizedInput.split(' ').where((w)=>w.isNotEmpty).toSet();
-
-    if (candidate.isEmpty || !candidate.every(inputWords.contains)) continue;
-    final score = candidate.length / inputWords.length;
-    if (score > bestScore) {
-      bestScore = score;
-      best = entry.value;
+    catalogFeedback = catalog[normalizedInput];
+  } else {
+    // Partial matching
+    MealFeedback? best;
+    var bestScore = 0.0;
+    for (final entry in catalog.entries) {
+      final candidate = entry.key.split(' ').toSet();
+      final inputWords = words.toSet();
+      if (candidate.isEmpty || !candidate.every(inputWords.contains)) continue;
+      final score = candidate.length / inputWords.length;
+      if (score > bestScore) {
+        bestScore = score;
+        best = entry.value;
+      }
     }
+    if (best != null && bestScore > 0.5) catalogFeedback = best;
   }
 
-  if (best != null && bestScore > 0.5) return best;
+  // 2. Break down the meal into items
+  final itemDetails = words.map((w) => _analyzeItem(w)).toList();
 
-  // 2. Fallback to Heuristic Analysis
-  return _analyzeByComposition(input);
+  // 3. Determine Overall Status
+  bool hasProcessed = itemDetails.any((i) => i.isWarning);
+  bool hasProtein = itemDetails.any((i) => i.type == 'protein');
+  bool hasCarb = itemDetails.any((i) => i.type == 'carb');
+  bool hasFiber = itemDetails.any((i) => i.type == 'fiber');
+
+  String title, status, body, improvement;
+
+  if (catalogFeedback != null) {
+    title = catalogFeedback.title;
+    status = catalogFeedback.status;
+    body = catalogFeedback.body;
+    improvement = catalogFeedback.improvement;
+  } else if (hasProcessed) {
+    title = 'Atenção aos Processados';
+    status = 'important';
+    body = 'Sua refeição contém itens ultraprocessados que podem ser prejudiciais à saúde a longo prazo.';
+    improvement = 'Tente substituir os processados por alimentos in natura ou caseiros.';
+  } else if (hasProtein && hasCarb && hasFiber) {
+    title = 'Refeição Equilibrada';
+    status = 'positive';
+    body = 'Excelente combinação! Você reuniu os três grupos principais de nutrientes.';
+    improvement = 'Mantenha a variedade de cores nos vegetais.';
+  } else if (!hasProtein) {
+    title = 'Falta Proteína';
+    status = 'attention';
+    body = 'Sua refeição tem energia, mas falta proteína para os músculos e saciedade.';
+    improvement = 'Adicione ovo, frango, peixe ou feijão.';
+  } else if (!hasFiber) {
+    title = 'Faltam Fibras';
+    status = 'attention',
+    body = 'Faltam vegetais ou frutas para equilibrar a absorção de nutrientes.',
+    improvement = 'Tente adicionar uma porção de salada ou legumes.';
+  } else {
+    title = 'Análise Geral';
+    status = 'information';
+    body = 'Analisamos a composição do seu prato com base nos grupos nutricionais.';
+    improvement = 'Procure sempre combinar proteínas, carboidratos e fibras.';
+  }
+
+  return MealAnalysisReport(
+    overallTitle: title,
+    overallStatus: status,
+    overallBody: body,
+    improvement: improvement,
+    itemDetails: itemDetails,
+    totalCalories: calories ?? 0,
+  );
 }
 
 IconData feedbackIcon(String status) {
