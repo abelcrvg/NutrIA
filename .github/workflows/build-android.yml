@@ -28,25 +28,87 @@ jobs:
       - name: Create Android project files
         run: flutter create --platforms=android --project-name=nutria .
 
-      - name: Repair Dart source before build
+      - name: Repair and validate Dart source before build
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
+
           main = Path('lib/main.dart')
           text = main.read_text()
-          broken = "OutlinedButton.icon(onPressed:()=>supabase.auth.signOut(),icon:const Icon(Icons.logout),label:const Text('Sair da conta'))]))];}"
-          fixed = "OutlinedButton.icon(onPressed:()=>supabase.auth.signOut(),icon:const Icon(Icons.logout),label:const Text('Sair da conta'))]));}"
-          if broken in text:
-              text = text.replace(broken, fixed, 1)
-              main.write_text(text)
+          start = text.find('Widget _profile()=>')
+          end = text.find('\nclass _StatValue', start)
+          if start == -1 or end == -1:
+              raise SystemExit('Could not locate _profile() in main.dart')
+
+          replacement = """Widget _profile() {
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 32),
+              children: [
+                Text(
+                  'Seu perfil',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 20),
+                NutrIACard(
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 34,
+                        backgroundColor: NutriTheme.mint,
+                        child: Text(
+                          _initial,
+                          style: const TextStyle(
+                            fontSize: 25,
+                            color: NutriTheme.green,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _name,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        supabase.auth.currentUser?.email ?? '',
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 20),
+                      OutlinedButton.icon(
+                        onPressed: () => supabase.auth.signOut(),
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Sair da conta'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
+"""
+          text = text[:start] + replacement + text[end:]
+          main.write_text(text)
+
           entry = Path('lib/meal_entry.dart')
-          text = entry.read_text().replace('DropdownButtonFormField<String>(initialValue:', 'DropdownButtonFormField<String>(value:')
+          text = entry.read_text().replace(
+              'DropdownButtonFormField<String>(initialValue:',
+              'DropdownButtonFormField<String>(value:',
+          )
           entry.write_text(text)
-          matching = Path('lib/meal_matching.dart')
-          text = matching.read_text()
-          if 'IconData feedbackIcon(' not in text:
-              text += "\nIconData feedbackIcon(String status) {\n  switch (status) {\n    case 'positive': return Icons.check_circle_outline;\n    case 'attention': return Icons.warning_amber_outlined;\n    case 'important': return Icons.error_outline;\n    default: return Icons.info_outline;\n  }\n}\n"
-              matching.write_text(text)
           PY
           dart format lib
           flutter analyze --no-pub
