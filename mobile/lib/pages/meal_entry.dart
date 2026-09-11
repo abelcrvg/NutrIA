@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'meal_matching.dart';
-import 'theme.dart';
-import 'supabase_config.dart';
+import '../theme.dart';
+import '../supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 final supabase = Supabase.instance.client;
 
