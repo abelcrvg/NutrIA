@@ -28,6 +28,29 @@ jobs:
       - name: Create Android project files
         run: flutter create --platforms=android --project-name=nutria .
 
+      - name: Repair Dart source before build
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          main = Path('lib/main.dart')
+          text = main.read_text()
+          broken = "OutlinedButton.icon(onPressed:()=>supabase.auth.signOut(),icon:const Icon(Icons.logout),label:const Text('Sair da conta'))]))];}"
+          fixed = "OutlinedButton.icon(onPressed:()=>supabase.auth.signOut(),icon:const Icon(Icons.logout),label:const Text('Sair da conta'))]));}"
+          if broken in text:
+              text = text.replace(broken, fixed, 1)
+              main.write_text(text)
+          entry = Path('lib/meal_entry.dart')
+          text = entry.read_text().replace('DropdownButtonFormField<String>(initialValue:', 'DropdownButtonFormField<String>(value:')
+          entry.write_text(text)
+          matching = Path('lib/meal_matching.dart')
+          text = matching.read_text()
+          if 'IconData feedbackIcon(' not in text:
+              text += "\nIconData feedbackIcon(String status) {\n  switch (status) {\n    case 'positive': return Icons.check_circle_outline;\n    case 'attention': return Icons.warning_amber_outlined;\n    case 'important': return Icons.error_outline;\n    default: return Icons.info_outline;\n  }\n}\n"
+              matching.write_text(text)
+          PY
+          dart format lib
+          flutter analyze --no-pub
+
       - name: Configure Android network and NDK
         run: |
           python3 - <<'PY'
@@ -38,23 +61,18 @@ jobs:
           if 'android.permission.INTERNET' not in text:
               text = text.replace('<application', permission + '    <application', 1)
               manifest.write_text(text)
-
           gradle = Path('android/app/build.gradle.kts')
           text = gradle.read_text()
           desired = '27.0.12077973'
           lines = text.splitlines()
-          found = False
           for i, line in enumerate(lines):
               if 'ndkVersion' in line:
                   indent = line[:len(line) - len(line.lstrip())]
                   lines[i] = f'{indent}ndkVersion = "{desired}"'
-                  found = True
                   break
-          if found:
-              text = '\n'.join(lines) + ('\n' if text.endswith('\n') else '')
           else:
-              text = text.replace('android {', f'android {{\n    ndkVersion = "{desired}"', 1)
-          gradle.write_text(text)
+              lines.insert(1, f'    ndkVersion = "{desired}"')
+          gradle.write_text('\n'.join(lines) + '\n')
           PY
 
       - name: Build APK
