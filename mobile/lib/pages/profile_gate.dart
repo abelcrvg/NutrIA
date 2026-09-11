@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../supabase_config.dart';
 import 'home_page.dart';
 import 'onboarding.dart';
-
-final supabase = Supabase.instance.client;
 
 class ProfileGate extends StatefulWidget {
   const ProfileGate({super.key});

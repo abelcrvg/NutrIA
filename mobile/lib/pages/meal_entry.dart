@@ -3,7 +3,6 @@ import 'meal_matching.dart';
 import '../theme.dart';
 import '../supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-final supabase = Supabase.instance.client;
 
 class MealEntryPage extends StatefulWidget { const MealEntryPage({super.key}); @override State<MealEntryPage> createState()=>_MealEntryPageState(); }
 class _MealEntryPageState extends State<MealEntryPage>{final _nameController=TextEditingController();final _caloriesController=TextEditingController();String _mealType='Almoço';bool _isAnalyzing=false;final _suggestions=const['Arroz, feijão, ovo e salada','Arroz integral, frango e salada','Macarrão, carne, ovo e salada','Cuscuz com ovo','Açaí, banana e iogurte natural'];@override void dispose(){_nameController.dispose();_caloriesController.dispose();super.dispose();}void _selectSuggestion(String v){_nameController.text=v;_nameController.selection=TextSelection.fromPosition(TextPosition(offset:v.length));setState((){});}Future<void> _analyze() async{final name=_nameController.text.trim();if(name.isEmpty)return;FocusManager.instance.primaryFocus?.unfocus();setState(()=>_isAnalyzing=true);await Future<void>.delayed(const Duration(milliseconds:180));if(!mounted)return;setState(()=>_isAnalyzing=false);await Navigator.push(context,MaterialPageRoute(builder:(_)=>MealAnalysisPage(mealName:name,mealType:_mealType,calories:num.tryParse(_caloriesController.text.trim()))));}
