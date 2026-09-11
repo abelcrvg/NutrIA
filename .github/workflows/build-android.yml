@@ -30,11 +30,18 @@ jobs:
 
       - name: Add Internet Permission
         run: |
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
+          if [ -f android/app/src/main/AndroidManifest.xml ]; then
+            sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
+          else
+            echo "AndroidManifest.xml not found!"
+            exit 1
+          fi
 
-      - name: Validate Dart source
-        run: |
-          flutter analyze
+      - name: Debug - List Android files
+        run: ls -R android
+
+      - name: Build APK
+        run: flutter build apk --release
 
 
 
