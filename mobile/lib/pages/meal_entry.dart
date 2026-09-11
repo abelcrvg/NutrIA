@@ -156,7 +156,7 @@ class _MealEntryPageState extends State<MealEntryPage> {
                   : const Icon(Icons.auto_awesome),
               label: Text(_isAnalyzing ? 'Analisando...' : 'Analisar refeição'),
             ),
-            constHBox(height: 10),
+            const SizedBox(height: 10),
             const Text(
               'Analisar não adiciona a refeição. Você sempre confirma antes de registrar.',
               textAlign: TextAlign.center,

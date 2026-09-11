@@ -106,8 +106,8 @@ MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
     improvement = 'Adicione ovo, frango, peixe ou feijão.';
   } else if (!hasFiber) {
     title = 'Faltam Fibras';
-    status = 'attention',
-    body = 'Faltam vegetais ou frutas para equilibrar a absorção de nutrientes.',
+    status = 'attention';
+    body = 'Faltam vegetais ou frutas para equilibrar a absorção de nutrientes.';
     improvement = 'Tente adicionar uma porção de salada ou legumes.';
   } else {
     title = 'Análise Geral';
