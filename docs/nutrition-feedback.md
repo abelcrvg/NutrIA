@@ -14,6 +14,7 @@ A futura análise por imagem poderá usar exatamente o mesmo catálogo e motor d
 - Explicar o principal ponto nutricional da refeição e oferecer uma melhoria prática.
 - Considerar contexto e porção quando disponíveis.
 - Mensagens devem ser educativas, não substituindo orientação de nutricionista ou médico.
+- Combinações específicas devem ter prioridade sobre feedback genérico de ingredientes isolados.
 
 ## Catálogo inicial
 
@@ -32,6 +33,17 @@ A futura análise por imagem poderá usar exatamente o mesmo catálogo e motor d
 ### Arroz com ovo
 **Mensagem:** O ovo é uma boa fonte de proteína e combina bem com o arroz. Dependendo da quantidade e do restante do dia, a refeição pode ficar com pouca fibra e variedade de vegetais. Um acompanhamento simples pode melhorar bastante a composição.
 **Melhoria sugerida:** feijão, legumes ou salada.
+
+### Arroz com farofa
+**Status:** ⚠️ Atenção
+
+**Mensagem:** Arroz e farofa formam uma combinação concentrada principalmente em carboidratos. Sozinhos, esses alimentos oferecem pouca proteína e pouca variedade de vegetais, então podem deixar a refeição menos completa nutricionalmente. A quantidade de farofa também importa, porque ela pode acrescentar bastante energia à refeição sem fornecer uma quantidade proporcional de proteína ou fibras.
+
+**O que observar:** o principal ponto de atenção é a falta de uma fonte clara de proteína e de alimentos ricos em fibras/vegetais. A composição da farofa também varia conforme a receita: versões com bacon, linguiça, manteiga ou outros ingredientes podem aumentar gordura e sódio.
+
+**Como melhorar:** mantenha o arroz e uma porção moderada de farofa, mas acrescente uma fonte de proteína, como ovo, frango, carne ou peixe, e algum vegetal ou salada.
+
+**Exemplo de transformação:** arroz + farofa + ovo + feijão + salada transforma uma combinação predominantemente de carboidratos em uma refeição com mais variedade, proteína e fibras.
 
 ### Feijão
 **Mensagem:** O feijão fornece fibras, proteína vegetal e diversos micronutrientes. Sozinho pode não formar uma refeição completa, mas é uma excelente base para combinar com outros alimentos.
@@ -144,6 +156,19 @@ A futura análise por imagem poderá usar exatamente o mesmo catálogo e motor d
 ## Fallback para pratos não cadastrados
 
 **Mensagem:** Ainda não temos uma orientação específica para este prato. Observe três pontos: uma fonte de proteína, uma fonte de fibras/vegetais e uma quantidade adequada de carboidratos. Quanto mais variada e pouco processada for a refeição, melhor tende a ser a qualidade nutricional geral.
+
+## Arquitetura do feedback específico
+
+O catálogo deve distinguir alimentos individuais de combinações de alimentos. Uma combinação cadastrada deve ter prioridade quando todos os seus itens forem identificados na refeição.
+
+Exemplo de prioridade:
+
+1. **Combinação específica:** arroz + farofa.
+2. **Combinações mais completas:** arroz + farofa + ovo.
+3. **Feedback dos ingredientes individuais:** arroz e farofa.
+4. **Regras genéricas:** só entram quando ainda houver algum ponto relevante não coberto pela análise específica.
+
+Cada combinação pode armazenar título, status, análise principal, pontos de atenção, explicação, melhoria e sugestões. Isso permite que o texto seja escrito especificamente para aquele prato sem depender de frases montadas automaticamente.
 
 ## Próxima expansão
 
