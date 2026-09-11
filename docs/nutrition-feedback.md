@@ -129,6 +129,10 @@ A futura análise por imagem poderá usar exatamente o mesmo catálogo e motor d
 **Mensagem:** A aveia fornece carboidratos e fibras, incluindo beta-glucana. Pode ser uma forma simples de aumentar a fibra de uma refeição ou lanche.
 **Melhoria sugerida:** combinar com iogurte/leite e fruta para formar um lanche mais completo.
 
+### Feijoada
+**Mensagem:** A feijoada reúne feijão e diferentes carnes, podendo fornecer proteína, ferro e fibras, mas a composição varia bastante conforme as carnes e acompanhamentos. Preparações com cortes mais gordurosos, bacon e linguiça podem elevar gordura e sódio. Arroz, farofa, torresmo e outros acompanhamentos também aumentam a energia total da refeição.
+**Melhoria sugerida:** priorizar uma porção adequada, incluir couve ou outros vegetais e equilibrar os acompanhamentos mais gordurosos ao longo do dia.
+
 ## Fallback para pratos não cadastrados
 
 **Mensagem:** Ainda não temos uma orientação específica para este prato. Observe três pontos: uma fonte de proteína, uma fonte de fibras/vegetais e uma quantidade adequada de carboidratos. Quanto mais variada e pouco processada for a refeição, melhor tende a ser a qualidade nutricional geral.
