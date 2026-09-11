@@ -27,6 +27,11 @@ const mealFeedbacks = <String, MealFeedback>{
   'omelete com salada': MealFeedback('Boa combinação', 'positive', 'A omelete fornece proteína e a salada contribui com vegetais e fibras. É uma combinação simples que pode ser adaptada com diferentes legumes.', 'Inclua legumes na omelete ou varie os vegetais da salada.'),
   'arroz com feijão e ovo': MealFeedback('Boa combinação', 'positive', 'O arroz fornece carboidratos, o feijão contribui com fibras e nutrientes, e o ovo acrescenta proteína.', 'Acrescente vegetais e varie as fontes de proteína ao longo da semana.'),
   'tapioca com ovo e banana': MealFeedback('Pode ficar mais completa', 'positive', 'A tapioca e a banana fornecem carboidratos, enquanto o ovo acrescenta proteína. A fruta também contribui com fibras e micronutrientes.', 'Inclua vegetais em outra refeição e observe as porções quando combinar várias fontes de carboidratos.'),
+  'arroz, feijão, carne, salada e farofa': MealFeedback('Refeição variada, mas densa', 'information', 'A combinação reúne carboidratos do arroz e da farofa, proteína da carne, fibras do feijão e vegetais da salada. A farofa acrescenta mais uma fonte de carboidrato e sua preparação pode aumentar gordura e sódio.', 'Ajuste a porção de farofa ao restante do prato e mantenha uma boa presença de feijão, verduras e legumes.'),
+  'cuscuz com ovo': MealFeedback('Boa base para o café da manhã', 'positive', 'O cuscuz fornece principalmente carboidratos e o ovo acrescenta proteína, formando uma combinação simples e versátil.', 'Acrescente uma fruta ou vegetais em outras refeições e varie as fontes de proteína ao longo do dia.'),
+  'cuscuz com frango e salada': MealFeedback('Refeição bem composta', 'positive', 'O cuscuz fornece carboidratos, o frango acrescenta proteína e a salada contribui com vegetais e fibras. A combinação reúne diferentes grupos alimentares.', 'Varie os vegetais e observe a quantidade de óleo, molhos e acompanhamentos usados no preparo.'),
+  'pão de queijo com café': MealFeedback('Pode ficar mais completa', 'information', 'O pão de queijo fornece carboidratos e gordura, enquanto o café pode acompanhar a refeição. Sozinha, a combinação tende a oferecer pouca fibra e uma quantidade limitada de proteína.', 'Combine com uma fruta e, quando fizer sentido, com uma fonte de proteína como iogurte ou ovo.'),
+  'vitamina de banana com aveia': MealFeedback('Boa opção para um lanche', 'positive', 'A banana contribui com carboidratos e fibras, e a aveia acrescenta fibras. O perfil final depende da base usada e dos ingredientes adicionados.', 'Use uma base com pouco açúcar adicionado e considere incluir uma fonte de proteína para deixar o lanche mais completo.'),
 };
 
 MealFeedback? findMealFeedback(String input) {
@@ -49,7 +54,7 @@ String normalizeMealText(String input) {
   const replacements = {'á':'a','à':'a','ã':'a','â':'a','ä':'a','é':'e','ê':'e','ë':'e','í':'i','ï':'i','ó':'o','ô':'o','õ':'o','ö':'o','ú':'u','ü':'u','ç':'c'};
   replacements.forEach((from, to) => value = value.replaceAll(from, to));
   value = value.replaceAll(RegExp(r'[^a-z0-9]+'), ' ');
-  const aliases = {'refri':'refrigerante','burguer':'hamburguer','pao':'pao','feijao':'feijao'};
+  const aliases = {'refri':'refrigerante','burguer':'hamburguer'};
   return value.split(RegExp(r'\s+')).where((word) => word.isNotEmpty).map((word) => aliases[word] ?? word).join(' ');
 }
 
