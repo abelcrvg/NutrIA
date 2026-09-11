@@ -1,0 +1,25 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Secrets / local environment
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Supabase local state
+supabase/.temp/
+supabase/.branches/
