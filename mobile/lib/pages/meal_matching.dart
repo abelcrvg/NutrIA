@@ -22,25 +22,25 @@ MealItemAnalysis _analyzeItem(String item) {
   const proteins = {'carne', 'frango', 'peixe', 'ovo', 'feijao', 'lentilha', 'grao-de-bico', 'queijo', 'leite', 'soja', 'tofu'};
   const fibers = {'salada', 'legumes', 'verduras', 'brocolis', 'alface', 'cenoura', 'abobrinha', 'tomate', 'fruta', 'banana', 'maca', 'laranja', 'espinafre'};
   const processed = {
-    'miojo': 'Ultraprocessado: rico em sódio e aditivos.',
-    'salsicha': 'Ultraprocessado: alto índice de conservantes.',
-    'nugget': 'Ultraprocessado: baixo valor nutricional.',
-    'refrigerante': 'Açúcar em excesso e corantes.',
-    'biscoito': 'Farinha refinada e gordura trans.',
-    'salgadinho': 'Excesso de sódio e realçadores artificiais.',
+    'miojo': 'Ultraprocessado: rico em sódio e glutamato monossódico, que podem causar retenção de líquidos e pressão alta.',
+    'salsicha': 'Ultraprocessado: contém nitritos e nitratos, conservantes associados a riscos à saúde a longo prazo.',
+    'nugget': 'Ultraprocessado: baixa quantidade de proteína real, rico em farinhas e gorduras saturadas.',
+    'refrigerante': 'Açúcar em excesso e corantes artificiais que prejudicam a saúde metabólica e a insulina.',
+    'biscoito': 'Rico em farinha refinada e gorduras trans, oferecendo calorias vazias e pouca saciedade.',
+    'salgadinho': 'Excesso de sódio e realçadores de sabor artificiais que sobrecarregam os rins.',
   };
 
   if (processed.containsKey(item)) {
     return MealItemAnalysis(name: item, type: 'processed', isWarning: true, detail: processed[item]!);
   }
   if (proteins.contains(item)) {
-    return const MealItemAnalysis(name: 'Proteína', type: 'protein', isWarning: false, detail: 'Essencial para músculos e saciedade.');
+    return const MealItemAnalysis(name: 'Proteína', type: 'protein', isWarning: false, detail: 'Essencial para a construção muscular e controle da fome.');
   }
   if (carbos.contains(item)) {
-    return const MealItemAnalysis(name: 'Carboidrato', type: 'carb', isWarning: false, detail: 'Fonte primária de energia para o corpo.');
+    return const MealItemAnalysis(name: 'Carboidrato', type: 'carb', isWarning: false, detail: 'Fonte primária de energia para o cérebro e músculos.');
   }
   if (fibers.contains(item)) {
-    return const MealItemAnalysis(name: 'Fibra', type: 'fiber', isWarning: false, detail: 'Melhora a digestão e controla a glicemia.');
+    return const MealItemAnalysis(name: 'Fibra', type: 'fiber', isWarning: false, detail: 'Essencial para a saúde intestinal e controle da glicemia.');
   }
   return MealItemAnalysis(name: item, type: 'unknown', isWarning: false, detail: 'Alimento identificado.');
 }
