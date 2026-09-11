@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 import 'meal_entry.dart';
+import 'login_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() => runApp(const NutriApp());
+final supabase = Supabase.instance.client;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://mkckjeheeuwfzxfexese.supabase.co',
+    publishableKey: 'sb_publishable_7r495qqp9Ogd7wcgKuDi-A_ymT6Bohp',
+  );
+  runApp(const NutriApp());
+}
 
 class NutriApp extends StatelessWidget {
   const NutriApp({super.key});
@@ -9,7 +20,16 @@ class NutriApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     title: 'NutrIA', debugShowCheckedModeBanner: false,
     theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)), useMaterial3: true),
-    home: const HomePage(),
+    home: const AuthGate(),
+  );
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+  @override
+  Widget build(BuildContext context) => StreamBuilder<AuthState>(
+    stream: supabase.auth.onAuthStateChange,
+    builder: (context, snapshot) => supabase.auth.currentSession == null ? const LoginPage() : const HomePage(),
   );
 }
 
@@ -18,9 +38,18 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const consumed = 1280, goal = 2100;
+    final user = supabase.auth.currentUser;
+    final displayName = (user?.userMetadata?['full_name'] as String?)?.trim();
     return Scaffold(
-      appBar: AppBar(title: const Text('NutrIA'), actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.person_outline))]),
+      appBar: AppBar(title: const Text('NutrIA'), actions: [
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.person_outline),
+          onSelected: (value) async { if (value == 'logout') await supabase.auth.signOut(); },
+          itemBuilder: (_) => [PopupMenuItem(value: 'account', child: Text(displayName?.isNotEmpty == true ? displayName! : (user?.email ?? 'Minha conta'))), const PopupMenuItem(value: 'logout', child: Text('Sair'))],
+        ),
+      ]),
       body: ListView(padding: const EdgeInsets.all(20), children: [
+        if (displayName?.isNotEmpty == true) ...[Text('Olá, $displayName 👋', style: Theme.of(context).textTheme.titleMedium), const SizedBox(height: 8)],
         Text('Resumo de hoje', style: Theme.of(context).textTheme.headlineSmall), const SizedBox(height: 16),
         Card(child: Padding(padding: const EdgeInsets.all(24), child: Column(children: [
           SizedBox(width: 170, height: 170, child: Stack(alignment: Alignment.center, children: [
@@ -38,10 +67,7 @@ class HomePage extends StatelessWidget {
         const SizedBox(height: 20),
         Card(child: ListTile(leading: const Icon(Icons.water_drop_outlined), title: const Text('Água'), subtitle: const Text('1.250 ml registrados hoje'), trailing: FilledButton(onPressed: () {}, child: const Text('+250 ml')))),
       ]),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MealEntryPage())),
-        icon: const Icon(Icons.add), label: const Text('Adicionar refeição'),
-      ),
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MealEntryPage())), icon: const Icon(Icons.add), label: const Text('Adicionar refeição')),
     );
   }
 }

@@ -17,8 +17,16 @@ const mealFeedbacks = <String, MealFeedback>{
   'arroz, feijão, ovo e salada': MealFeedback('Refeição bem distribuída', 'positive', 'O arroz fornece carboidratos, o feijão acrescenta fibras e nutrientes, o ovo fornece proteína e a salada amplia a variedade de vegetais.', 'Varie as verduras e legumes e ajuste as porções de acordo com sua rotina alimentar.'),
   'macarrão, carne e salada': MealFeedback('Boa combinação', 'positive', 'O macarrão é uma fonte de carboidratos, a carne contribui com proteína e a salada adiciona vegetais e fibras.', 'Priorize preparações com menos óleo e varie os vegetais ao longo da semana.'),
   'hambúrguer e batata frita': MealFeedback('Atenção ao conjunto', 'attention', 'O hambúrguer fornece proteína, mas pode concentrar gordura e sódio. A batata frita aumenta a densidade energética por causa da fritura.', 'Reduza a frequência ou a porção da fritura e acrescente vegetais à refeição.'),
-  'açaí com banana': MealFeedback('Pode ser uma boa opção', 'information', 'A banana contribui com carboidratos, fibras e micronutrientes, enquanto o açaí fornece energia e pode fazer parte de uma refeição ou lanche. O preparo e os acompanhamentos mudam bastante o perfil final.', 'Observe a quantidade de açúcar e coberturas adicionadas e considere combinar com uma fonte de proteína quando fizer sentido.'),
+  'açaí com banana': MealFeedback('Pode ser uma boa opção', 'information', 'A banana contribui com carboidratos, fibras e micronutrientes, enquanto o açaí pode fazer parte de um lanche. O preparo e os acompanhamentos mudam bastante o perfil final.', 'Observe a quantidade de açúcar e coberturas adicionadas e considere combinar com uma fonte de proteína quando fizer sentido.'),
   'iogurte, banana e aveia': MealFeedback('Boa combinação', 'positive', 'O iogurte fornece proteína, a banana contribui com carboidratos e fibras, e a aveia acrescenta fibras e ajuda a tornar a refeição mais completa.', 'Prefira iogurte natural quando possível e varie as frutas e sementes ao longo da semana.'),
+  'arroz integral, frango e salada': MealFeedback('Refeição equilibrada', 'positive', 'O arroz integral fornece carboidratos e mais fibras que versões refinadas, o frango acrescenta proteína e a salada amplia a presença de vegetais.', 'Varie legumes e verduras e ajuste as porções ao restante do dia.'),
+  'arroz integral, feijão e frango': MealFeedback('Boa base para a refeição', 'positive', 'O arroz integral e o feijão combinam fontes de carboidratos e fibras, enquanto o frango acrescenta proteína. É uma base versátil para uma refeição completa.', 'Acrescente verduras ou legumes para aumentar a variedade de vegetais.'),
+  'macarrão, carne, ovo e salada': MealFeedback('Refeição completa', 'positive', 'O macarrão fornece carboidratos, carne e ovo acrescentam proteínas, e a salada contribui com vegetais e fibras. A combinação reúne vários grupos alimentares.', 'Observe o tamanho das porções e a quantidade de óleo e molhos usados no preparo.'),
+  'açaí, banana e iogurte natural': MealFeedback('Boa combinação para um lanche', 'positive', 'A banana fornece carboidratos e fibras, o iogurte natural acrescenta proteína e o açaí contribui com energia. Os acompanhamentos podem alterar bastante o resultado.', 'Prefira preparações com menos açúcar adicionado e observe as porções dos acompanhamentos.'),
+  'miojo com ovo': MealFeedback('Atenção ao conjunto', 'attention', 'O ovo acrescenta proteína ao macarrão instantâneo, mas o miojo costuma concentrar sódio e oferece pouca variedade de vegetais e fibras.', 'Use menos do tempero pronto, acrescente vegetais e alterne com outras fontes de carboidratos e proteínas.'),
+  'omelete com salada': MealFeedback('Boa combinação', 'positive', 'A omelete fornece proteína e a salada contribui com vegetais e fibras. É uma combinação simples que pode ser adaptada com diferentes legumes.', 'Inclua legumes na omelete ou varie os vegetais da salada.'),
+  'arroz com feijão e ovo': MealFeedback('Boa combinação', 'positive', 'O arroz fornece carboidratos, o feijão contribui com fibras e nutrientes, e o ovo acrescenta proteína.', 'Acrescente vegetais e varie as fontes de proteína ao longo da semana.'),
+  'tapioca com ovo e banana': MealFeedback('Pode ficar mais completa', 'positive', 'A tapioca e a banana fornecem carboidratos, enquanto o ovo acrescenta proteína. A fruta também contribui com fibras e micronutrientes.', 'Inclua vegetais em outra refeição e observe as porções quando combinar várias fontes de carboidratos.'),
 };
 
 MealFeedback? findMealFeedback(String input) {
@@ -31,10 +39,7 @@ MealFeedback? findMealFeedback(String input) {
     final candidate = normalizeMealText(entry.key).split(' ').where((word) => word.isNotEmpty).toSet();
     if (candidate.isEmpty || !candidate.every(words.contains)) continue;
     final score = candidate.length / words.length;
-    if (score > bestScore) {
-      bestScore = score;
-      best = entry.value;
-    }
+    if (score > bestScore) { bestScore = score; best = entry.value; }
   }
   return best;
 }
