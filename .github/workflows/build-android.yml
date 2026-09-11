@@ -28,6 +28,17 @@ jobs:
       - name: Create Android project files
         run: flutter create --platforms=android --project-name=nutria .
 
+      - name: Configure Android NDK
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('android/app/build.gradle.kts')
+          text = path.read_text()
+          if 'ndkVersion =' not in text:
+              text = text.replace('android {', 'android {\n    ndkVersion = "27.0.12077973"', 1)
+              path.write_text(text)
+          PY
+
       - name: Build APK
         run: flutter build apk --release
 
