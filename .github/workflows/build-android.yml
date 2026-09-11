@@ -32,83 +32,17 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-
           main = Path('lib/main.dart')
           text = main.read_text()
           start = text.find('Widget _profile()=>')
           end = text.find('\nclass _StatValue', start)
           if start == -1 or end == -1:
               raise SystemExit('Could not locate _profile() in main.dart')
-
-          replacement = """Widget _profile() {
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 22, 20, 32),
-              children: [
-                Text(
-                  'Seu perfil',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 20),
-                NutrIACard(
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 34,
-                        backgroundColor: NutriTheme.mint,
-                        child: Text(
-                          _initial,
-                          style: const TextStyle(
-                            fontSize: 25,
-                            color: NutriTheme.green,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _name,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        supabase.auth.currentUser?.email ?? '',
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 20),
-                      OutlinedButton.icon(
-                        onPressed: () => supabase.auth.signOut(),
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Sair da conta'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          }
-"""
+          replacement = '''Widget _profile() {\n  return ListView(\n    padding: const EdgeInsets.fromLTRB(20, 22, 20, 32),\n    children: [\n      Text('Seu perfil', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),\n      const SizedBox(height: 20),\n      NutrIACard(\n        child: Column(\n          children: [\n            CircleAvatar(radius: 34, backgroundColor: NutriTheme.mint, child: Text(_initial, style: const TextStyle(fontSize: 25, color: NutriTheme.green, fontWeight: FontWeight.w800))),\n            const SizedBox(height: 12),\n            Text(_name, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),\n            const SizedBox(height: 4),\n            Text(supabase.auth.currentUser?.email ?? '', textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodyMedium),\n            const SizedBox(height: 20),\n            OutlinedButton.icon(onPressed: () => supabase.auth.signOut(), icon: const Icon(Icons.logout), label: const Text('Sair da conta')),\n          ],\n        ),\n      ),\n    ],\n  );\n}\n'''
           text = text[:start] + replacement + text[end:]
           main.write_text(text)
-
           entry = Path('lib/meal_entry.dart')
-          text = entry.read_text().replace(
-              'DropdownButtonFormField<String>(initialValue:',
-              'DropdownButtonFormField<String>(value:',
-          )
-          entry.write_text(text)
+          entry.write_text(entry.read_text().replace('DropdownButtonFormField<String>(initialValue:', 'DropdownButtonFormField<String>(value:'))
           PY
           dart format lib
           flutter analyze --no-pub
