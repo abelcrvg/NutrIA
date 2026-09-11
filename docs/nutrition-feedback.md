@@ -137,6 +137,10 @@ A futura análise por imagem poderá usar exatamente o mesmo catálogo e motor d
 **Mensagem:** O escondidinho pode combinar carboidratos da mandioca ou batata com uma fonte de proteína, mas o perfil muda conforme o recheio, queijo, creme e quantidade de gordura adicionada. Uma versão com proteína adequada e vegetais tende a oferecer mais variedade nutricional.
 **Melhoria sugerida:** manter uma porção adequada, escolher recheios com boa fonte de proteína e incluir salada ou legumes como acompanhamento.
 
+### Strogonoff
+**Mensagem:** O strogonoff pode fornecer proteína, mas creme de leite, queijos, molhos prontos e acompanhamentos como batata palha podem aumentar bastante a quantidade de gordura, sódio e energia da refeição. A composição varia conforme a receita e a porção.
+**Melhoria sugerida:** priorizar uma boa fonte de proteína, moderar a quantidade de molho e batata palha e acrescentar salada ou legumes ao prato.
+
 ## Fallback para pratos não cadastrados
 
 **Mensagem:** Ainda não temos uma orientação específica para este prato. Observe três pontos: uma fonte de proteína, uma fonte de fibras/vegetais e uma quantidade adequada de carboidratos. Quanto mais variada e pouco processada for a refeição, melhor tende a ser a qualidade nutricional geral.
