@@ -32,19 +32,29 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text()
-          permission = '<uses-permission android:name="android.permission.INTERNET"/>\n'
+          permission = '    <uses-permission android:name="android.permission.INTERNET"/>\n'
           if 'android.permission.INTERNET' not in text:
               text = text.replace('<application', permission + '    <application', 1)
               manifest.write_text(text)
 
           gradle = Path('android/app/build.gradle.kts')
           text = gradle.read_text()
-          if 'ndkVersion =' not in text:
-              text = text.replace('android {', 'android {\n    ndkVersion = "27.0.12077973"', 1)
-              gradle.write_text(text)
+          desired = '27.0.12077973'
+          lines = text.splitlines()
+          found = False
+          for i, line in enumerate(lines):
+              if 'ndkVersion' in line:
+                  indent = line[:len(line) - len(line.lstrip())]
+                  lines[i] = f'{indent}ndkVersion = "{desired}"'
+                  found = True
+                  break
+          if found:
+              text = '\n'.join(lines) + ('\n' if text.endswith('\n') else '')
+          else:
+              text = text.replace('android {', f'android {{\n    ndkVersion = "{desired}"', 1)
+          gradle.write_text(text)
           PY
 
       - name: Build APK
