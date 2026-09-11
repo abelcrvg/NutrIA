@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'meal_feedback_catalog.dart';
 import 'meal_feedback_extra.dart';
 
@@ -12,3 +13,12 @@ String normalizeMealText(String input) {
 String _canonical(String input){final words=normalizeMealText(input).split(' ').where((w)=>w.isNotEmpty).toList()..sort();return words.join('|');}
 final Map<String,MealFeedback> _canonicalFeedbacks=(){final r=<String,MealFeedback>{};for(final e in {...mealFeedbacks,...mealFeedbackExtras}.entries){r[_canonical(e.key)]=e.value;}return r;}();
 MealFeedback? findMealFeedbackSmart(String input){final exact=_canonicalFeedbacks[_canonical(input)];if(exact!=null)return exact;final words=normalizeMealText(input).split(' ').where((w)=>w.isNotEmpty).toSet();MealFeedback? best;var bestScore=0.0;for(final e in _canonicalFeedbacks.entries){final candidate=e.key.split('|').toSet();if(candidate.isEmpty||!candidate.every(words.contains))continue;final score=candidate.length/words.length;if(score>bestScore){bestScore=score;best=e.value;}}return best;}
+
+IconData feedbackIcon(String status) {
+  switch (status) {
+    case 'positive': return Icons.check_circle_outline;
+    case 'attention': return Icons.warning_amber_outlined;
+    case 'important': return Icons.error_outline;
+    default: return Icons.info_outline;
+  }
+}
