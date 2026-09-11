@@ -133,6 +133,10 @@ A futura análise por imagem poderá usar exatamente o mesmo catálogo e motor d
 **Mensagem:** A feijoada reúne feijão e diferentes carnes, podendo fornecer proteína, ferro e fibras, mas a composição varia bastante conforme as carnes e acompanhamentos. Preparações com cortes mais gordurosos, bacon e linguiça podem elevar gordura e sódio. Arroz, farofa, torresmo e outros acompanhamentos também aumentam a energia total da refeição.
 **Melhoria sugerida:** priorizar uma porção adequada, incluir couve ou outros vegetais e equilibrar os acompanhamentos mais gordurosos ao longo do dia.
 
+### Escondidinho
+**Mensagem:** O escondidinho pode combinar carboidratos da mandioca ou batata com uma fonte de proteína, mas o perfil muda conforme o recheio, queijo, creme e quantidade de gordura adicionada. Uma versão com proteína adequada e vegetais tende a oferecer mais variedade nutricional.
+**Melhoria sugerida:** manter uma porção adequada, escolher recheios com boa fonte de proteína e incluir salada ou legumes como acompanhamento.
+
 ## Fallback para pratos não cadastrados
 
 **Mensagem:** Ainda não temos uma orientação específica para este prato. Observe três pontos: uma fonte de proteína, uma fonte de fibras/vegetais e uma quantidade adequada de carboidratos. Quanto mais variada e pouco processada for a refeição, melhor tende a ser a qualidade nutricional geral.
