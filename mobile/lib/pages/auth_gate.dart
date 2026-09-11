@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../supabase_config.dart';
 import 'login_page.dart';
 import 'profile_gate.dart';
-
-final supabase = Supabase.instance.client;
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});

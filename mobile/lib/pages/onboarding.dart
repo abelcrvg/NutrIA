@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../main.dart';
+import '../supabase_config.dart';
 import '../theme.dart';
+import 'home_page.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
