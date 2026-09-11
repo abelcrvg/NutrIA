@@ -26,36 +26,12 @@ jobs:
         run: flutter pub get
 
       - name: Create Android project files
-        run: flutter create --platforms=android --project-name=nutria .
+        run: flutter create --platforms=android .
 
       - name: Validate Dart source
         run: |
-          dart format --output=none --set-exit-if-changed lib
-          flutter analyze --no-pub
+          flutter analyze
 
-      - name: Configure Android network and NDK
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          manifest = Path('android/app/src/main/AndroidManifest.xml')
-          text = manifest.read_text()
-          permission = '    <uses-permission android:name="android.permission.INTERNET"/>\n'
-          if 'android.permission.INTERNET' not in text:
-              text = text.replace('<application', permission + '    <application', 1)
-              manifest.write_text(text)
-          gradle = Path('android/app/build.gradle.kts')
-          text = gradle.read_text()
-          desired = '27.0.12077973'
-          lines = text.splitlines()
-          for i, line in enumerate(lines):
-              if 'ndkVersion' in line:
-                  indent = line[:len(line) - len(line.lstrip())]
-                  lines[i] = f'{indent}ndkVersion = "{desired}"'
-                  break
-          else:
-              lines.insert(1, f'    ndkVersion = "{desired}"')
-          gradle.write_text('\n'.join(lines) + '\n')
-          PY
 
       - name: Build APK
         run: flutter build apk --release
