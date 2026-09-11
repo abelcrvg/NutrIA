@@ -13,6 +13,7 @@ class NutriTheme {
       colorScheme: scheme.copyWith(primary: green, onPrimary: Colors.white, surface: cream),
       scaffoldBackgroundColor: cream,
       fontFamily: 'sans',
+      visualDensity: VisualDensity.adaptivePlatformDensity,
       appBarTheme: const AppBarTheme(backgroundColor: cream, elevation: 0, centerTitle: false),
       cardTheme: CardThemeData(elevation: 0, margin: EdgeInsets.zero, color: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22))),
       inputDecorationTheme: InputDecorationTheme(
@@ -20,11 +21,15 @@ class NutriTheme {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: scheme.outlineVariant)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: green, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.redAccent)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.redAccent, width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       ),
       filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), textStyle: const TextStyle(fontWeight: FontWeight.w700))),
       outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
       chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), side: BorderSide(color: scheme.outlineVariant), backgroundColor: Colors.white),
+      navigationBarTheme: NavigationBarThemeData(height: 72, elevation: 0, backgroundColor: Colors.white, indicatorColor: mint, labelTextStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: green, foregroundColor: Colors.white, elevation: 3),
     );
   }
 }
