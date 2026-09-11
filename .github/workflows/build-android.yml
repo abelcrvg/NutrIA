@@ -26,11 +26,16 @@ jobs:
         run: flutter pub get
 
       - name: Create Android project files
-        run: flutter create --platforms=android .
+        run: flutter create --platforms=android --project-name=nutria .
+
+      - name: Add Internet Permission
+        run: |
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
 
       - name: Validate Dart source
         run: |
           flutter analyze
+
 
 
       - name: Build APK
