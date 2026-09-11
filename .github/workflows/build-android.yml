@@ -28,10 +28,9 @@ jobs:
       - name: Create Android project files
         run: flutter create --platforms=android --project-name=nutria .
 
-      - name: Repair and validate Dart source before build
-        run: >-
-          python3 -c "from pathlib import Path; p=Path('lib/main.dart'); t=p.read_text(); s=t.find('Widget _profile()=>'); e=t.find('\\nclass _StatValue',s); assert s>=0 and e>=0; r=\"Widget _profile(){return ListView(padding:const EdgeInsets.fromLTRB(20,22,20,32),children:[Text('Seu perfil',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:20),NutrIACard(child:Column(children:[CircleAvatar(radius:34,backgroundColor:NutriTheme.mint,child:Text(_initial,style:const TextStyle(fontSize:25,color:NutriTheme.green,fontWeight:FontWeight.w800))),const SizedBox(height:12),Text(_name,textAlign:TextAlign.center,maxLines:2,overflow:TextOverflow.ellipsis,style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:4),Text(supabase.auth.currentUser?.email??'',textAlign:TextAlign.center,maxLines:2,overflow:TextOverflow.ellipsis,style:Theme.of(context).textTheme.bodyMedium),const SizedBox(height:20),OutlinedButton.icon(onPressed:()=>supabase.auth.signOut(),icon:const Icon(Icons.logout),label:const Text('Sair da conta'))]))]));}\\n\"; p.write_text(t[:s]+r+t[e:]); q=Path('lib/meal_entry.dart'); q.write_text(q.read_text().replace('DropdownButtonFormField<String>(initialValue:','DropdownButtonFormField<String>(value:'))"
-          dart format lib
+      - name: Validate Dart source
+        run: |
+          dart format --output=none --set-exit-if-changed lib
           flutter analyze --no-pub
 
       - name: Configure Android network and NDK
