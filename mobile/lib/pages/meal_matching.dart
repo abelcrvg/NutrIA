@@ -18,9 +18,18 @@ String _canonical(String input){
 
 /// Detailed analysis of each ingredient
 MealItemAnalysis _analyzeItem(String item) {
-  const carbos = {'arroz', 'macarrao', 'batata', 'pao', 'tapioca', 'cuscuz', 'farofa', 'mandioca', 'milho', 'aveia', 'massa'};
-  const proteins = {'carne', 'frango', 'peixe', 'ovo', 'feijao', 'lentilha', 'grao-de-bico', 'queijo', 'leite', 'soja', 'tofu'};
-  const fibers = {'salada', 'legumes', 'verduras', 'brocolis', 'alface', 'cenoura', 'abobrinha', 'tomate', 'fruta', 'banana', 'maca', 'laranja', 'espinafre'};
+  const carbos = {
+    'arroz', 'macarrao', 'batata', 'pao', 'tapioca', 'cuscuz', 'farofa', 'mandioca', 'milho', 'aveia', 'massa',
+    'quinoa', 'batata-doce', 'mandioquinha', 'amido', 'trigo', 'cevada', 'centeio'
+  };
+  const proteins = {
+    'carne', 'frango', 'peixe', 'ovo', 'feijao', 'lentilha', 'grao-de-bico', 'queijo', 'leite', 'soja', 'tofu',
+    'patinho', 'coxa', 'sobrecoxa', 'atum', 'salmao', 'ricota', 'cottage', 'grão-de-bico'
+  };
+  const fibers = {
+    'salada', 'legumes', 'verduras', 'brocolis', 'alface', 'cenoura', 'abobrinha', 'tomate', 'fruta', 'banana', 'maca', 'laranja', 'espinafre',
+    'couve', 'rucula', 'acelga', 'quiabo', 'berinjela', 'chuchu', 'abobora', 'melancia', 'mamao', 'manga', 'pera', 'uva'
+  };
   const processed = {
     'miojo': 'Ultraprocessado: rico em sódio e glutamato monossódico, que podem causar retenção de líquidos e pressão alta.',
     'salsicha': 'Ultraprocessado: contém nitritos e nitratos, conservantes associados a riscos à saúde a longo prazo.',
@@ -28,6 +37,12 @@ MealItemAnalysis _analyzeItem(String item) {
     'refrigerante': 'Açúcar em excesso e corantes artificiais que prejudicam a saúde metabólica e a insulina.',
     'biscoito': 'Rico em farinha refinada e gorduras trans, oferecendo calorias vazias e pouca saciedade.',
     'salgadinho': 'Excesso de sódio e realçadores de sabor artificiais que sobrecarregam os rins.',
+    'presunto': 'Processado: contém excesso de sódio e conservantes como nitritos.',
+    'presunto-cotto': 'Processado: contém excesso de sódio e conservantes como nitritos.',
+    'ham': 'Processado: contém excesso de sódio e conservantes como nitritos.',
+    'ketchup': 'Ultraprocessado: rico em açúcar e xarope de milho.',
+    'maionese': 'Ultraprocessado: rico em gorduras vegetais refinadas e aditivos.',
+    'nutella': 'Ultraprocessado: excesso de açúcar e gordura vegetal hidrogenada.',
   };
 
   if (processed.containsKey(item)) {
@@ -90,30 +105,35 @@ MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
     body = catalogFeedback.body;
     improvement = catalogFeedback.improvement;
   } else if (hasProcessed) {
-    title = 'Atenção aos Processados';
+    title = 'Alerta de Processados';
     status = 'important';
-    body = 'Sua refeição contém itens ultraprocessados que podem ser prejudiciais à saúde a longo prazo.';
-    improvement = 'Tente substituir os processados por alimentos in natura ou caseiros.';
+    body = 'Sua refeição contém itens ultraprocessados. Esses alimentos geralmente possuem excesso de sódio, açúcares e gorduras artificiais que prejudicam o metabolismo.';
+    improvement = 'Tente substituir o ${itemDetails.firstWhere((i) => i.isWarning).name} por uma opção natural ou caseira para reduzir a inflamação do corpo.';
   } else if (hasProtein && hasCarb && hasFiber) {
-    title = 'Refeição Equilibrada';
+    title = 'Prato Equilibrado!';
     status = 'positive';
-    body = 'Excelente combinação! Você reuniu os três grupos principais de nutrientes.';
-    improvement = 'Mantenha a variedade de cores nos vegetais.';
+    body = 'Parabéns! Você conseguiu combinar os três pilares da nutrição: energia (carbos), construção (proteínas) e saúde intestinal (fibras).';
+    improvement = 'Para a próxima refeição, tente variar as cores dos legumes para obter diferentes vitaminas.';
   } else if (!hasProtein) {
     title = 'Falta Proteína';
     status = 'attention';
-    body = 'Sua refeição tem energia, mas falta proteína para os músculos e saciedade.';
-    improvement = 'Adicione ovo, frango, peixe ou feijão.';
+    body = 'Sua refeição fornece energia, mas falta proteína. A proteína é essencial para a manutenção dos músculos e para manter você saciado por mais tempo.';
+    improvement = 'Tente adicionar ovos, frango, peixe, tofu ou leguminosas (como feijão e lentilha).';
   } else if (!hasFiber) {
     title = 'Faltam Fibras';
     status = 'attention';
-    body = 'Faltam vegetais ou frutas para equilibrar a absorção de nutrientes.';
-    improvement = 'Tente adicionar uma porção de salada ou legumes.';
+    body = 'Você tem a base energética e proteica, mas faltam fibras. Elas são cruciais para controlar a velocidade de absorção do açúcar no sangue.';
+    improvement = 'Adicione uma porção de salada, legumes cozidos ou uma fruta após a refeição.';
+  } else if (!hasCarb) {
+    title = 'Baixo Carboidrato';
+    status = 'information';
+    body = 'Sua refeição está rica em proteínas e fibras, mas baixa em carboidratos. Isso pode ser bom dependendo da sua dieta, mas pode causar fadiga em treinos intensos.';
+    improvement = 'Se sentir falta de energia, adicione uma porção moderada de arroz integral, batata-doce ou quinoa.';
   } else {
     title = 'Análise Geral';
     status = 'information';
-    body = 'Analisamos a composição do seu prato com base nos grupos nutricionais.';
-    improvement = 'Procure sempre combinar proteínas, carboidratos e fibras.';
+    body = 'Analisamos a composição do seu prato. Embora não seja perfeitamente equilibrada, ela fornece nutrientes básicos.';
+    improvement = 'Busque a regra do prato: metade de vegetais, um quarto de proteína e um quarto de carboidrato.';
   }
 
   return MealAnalysisReport(

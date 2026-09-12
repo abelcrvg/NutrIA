@@ -217,7 +217,7 @@ class MealAnalysisPage extends StatelessWidget {
   final num? calories;
   const MealAnalysisPage({super.key, required this.mealName, required this.mealType, this.calories});
 
-  Future<void> _add(BuildContext context) async {
+  Future<void> _add(BuildContext context, MealAnalysisReport report) async {
     final user = supabase.auth.currentUser;
     if (user == null) return;
     try {
@@ -226,7 +226,13 @@ class MealAnalysisPage extends StatelessWidget {
         'meal_type': mealType,
         'meal_name': mealName,
         'calories': calories?.toDouble(),
-        'source': 'manual'
+        'source': 'manual',
+        'ingredients': report.itemDetails.map((i) => {
+          'name': i.name,
+          'type': i.type,
+          'is_warning': i.isWarning,
+          'detail': i.detail,
+        }).toList(),
       });
       if (context.mounted) Navigator.pop(context, true);
     } catch (_) {
@@ -341,7 +347,7 @@ class MealAnalysisPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: () => _add(context),
+              onPressed: () => _add(context, report),
               icon: const Icon(Icons.check),
               label: const Text('Adicionar ao meu dia'),
             ),
