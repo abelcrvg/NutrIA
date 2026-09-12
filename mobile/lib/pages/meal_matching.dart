@@ -33,7 +33,7 @@ const Map<String, Map<String, dynamic>> FOOD_DATABASE = {
   'pao': {'cal_100g': 265, 'weights': {'fatia': 30, 'unidade': 50}},
 };
 
-MealItemAnalysis _analyzeItem(String item) {
+MealItemAnalysis _analyzeItem(String item, double qty, String unit) {
   final humanNames = {
     'batata_frita': 'Batata Frita',
     'arroz_integral': 'Arroz Integral',
@@ -66,19 +66,27 @@ MealItemAnalysis _analyzeItem(String item) {
   final calPer100 = dbInfo != null ? (dbInfo['cal_100g'] as num).toDouble() : 0.0;
   final weights = dbInfo != null ? Map<String, double>.from(dbInfo['weights']) : {};
 
+  // Calculate actual calories based on quantity and unit
+  double finalCalories = 0.0;
+  if (dbInfo != null) {
+    final weightInGrams = weights[unit] ?? 1.0; // Default to 1g if unit unknown
+    final totalGrams = qty * weightInGrams;
+    finalCalories = (totalGrams * calPer100) / 100;
+  }
+
   if (processed.containsKey(item)) {
-    return MealItemAnalysis(name: 'Ultraprocessado', foodName: foodName, type: 'processed', isWarning: true, detail: processed[item]!, caloriesPer100g: calPer100, unitWeights: weights);
+    return MealItemAnalysis(name: 'Ultraprocessado', foodName: foodName, type: 'processed', isWarning: true, detail: processed[item]!, caloriesPer100g: calPer100, unitWeights: weights, actualCalories: finalCalories);
   }
   if (proteins.contains(item)) {
-    return MealItemAnalysis(name: 'Proteína', foodName: foodName, type: 'protein', isWarning: false, detail: 'Essencial para a construção muscular e controle da fome.', caloriesPer100g: calPer100, unitWeights: weights);
+    return MealItemAnalysis(name: 'Proteína', foodName: foodName, type: 'protein', isWarning: false, detail: 'Essencial para a construção muscular e controle da fome.', caloriesPer100g: calPer100, unitWeights: weights, actualCalories: finalCalories);
   }
   if (carbos.contains(item)) {
-    return MealItemAnalysis(name: 'Carboidrato', foodName: foodName, type: 'carb', isWarning: false, detail: 'Fonte primária de energia para o cérebro e músculos.', caloriesPer100g: calPer100, unitWeights: weights);
+    return MealItemAnalysis(name: 'Carboidrato', foodName: foodName, type: 'carb', isWarning: false, detail: 'Fonte primária de energia para o cérebro e músculos.', caloriesPer100g: calPer100, unitWeights: weights, actualCalories: finalCalories);
   }
   if (fibers.contains(item)) {
-    return MealItemAnalysis(name: 'Fibra', foodName: foodName, type: 'fiber', isWarning: false, detail: 'Essencial para a saúde intestinal e controle da glicemia.', caloriesPer100g: calPer100, unitWeights: weights);
+    return MealItemAnalysis(name: 'Fibra', foodName: foodName, type: 'fiber', isWarning: false, detail: 'Essencial para a saúde intestinal e controle da glicemia.', caloriesPer100g: calPer100, unitWeights: weights, actualCalories: finalCalories);
   }
-  return MealItemAnalysis(name: item, foodName: foodName, type: 'unknown', isWarning: false, detail: 'Alimento identificado.', caloriesPer100g: calPer100, unitWeights: weights);
+  return MealItemAnalysis(name: item, foodName: foodName, type: 'unknown', isWarning: false, detail: 'Alimento identificado.', caloriesPer100g: calPer100, unitWeights: weights, actualCalories: finalCalories);
 }
 
 
