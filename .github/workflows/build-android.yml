@@ -15,36 +15,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
           channel: stable
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
-
-      - name: Create Android project files
-        run: flutter create --platforms=android --project-name=nutria .
-
-      - name: Configure Android NDK and Permissions
-        run: |
-          # Add Internet Permission
-          if [ -f android/app/src/main/AndroidManifest.xml ]; then
-            sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
-          fi
-
-          # Set NDK Version to 27.0.12077973
-          if [ -f android/app/build.gradle.kts ]; then
-            sed -i 's/ndkVersion = .*/ndkVersion = "27.0.12077973"/' android/app/build.gradle.kts || \
-            sed -i '/android {/a \    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
-          fi
-
-      - name: Build APK
-        run: flutter build apk --release
-
-
 
       - name: Build APK
         run: flutter build apk --release
@@ -53,5 +37,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nutria-android-apk
-          path: mobile/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
+          path: build/app/outputs/flutter-apk/app-release.apk
