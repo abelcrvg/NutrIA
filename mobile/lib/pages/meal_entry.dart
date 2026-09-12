@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'meal_matching.dart';
+import 'meal_adjustment_page.dart';
 import '../theme.dart';
 import '../supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -46,13 +47,17 @@ class _MealEntryPageState extends State<MealEntryPage> {
     await Future<void>.delayed(const Duration(milliseconds: 180));
     if (!mounted) return;
     setState(() => _isAnalyzing = false);
+
+    // Perform initial smart analysis to identify components
+    final report = findMealAnalysisSmart(name, num.tryParse(_caloriesController.text.trim()));
+
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MealAnalysisPage(
+        builder: (_) => MealAdjustmentPage(
           mealName: name,
           mealType: _mealType,
-          calories: num.tryParse(_caloriesController.text.trim()),
+          items: report.itemDetails,
         ),
       ),
     );
@@ -107,7 +112,7 @@ class _MealEntryPageState extends State<MealEntryPage> {
               onChanged: (_) => setState(() {}),
               decoration: const InputDecoration(
                 labelText: 'Refeição ou prato',
-                hintText: 'Ex.: arroz, feijão, frango e salada',
+                hintText: 'Ex.: 2 colheres de arroz, 1 concha de feijão',
                 alignLabelWithHint: true,
                 prefixIcon: Padding(
                   padding: EdgeInsets.only(bottom: 38),

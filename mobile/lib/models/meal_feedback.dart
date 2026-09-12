@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 
 class MealItemAnalysis {
   final String name;
+  final String foodName; // The original food (e.g., "Arroz")
   final String type; // 'carb', 'protein', 'fiber', 'processed', 'unknown'
   final bool isWarning;
   final String detail;
+  final num caloriesPer100g;
+  final Map<String, double> unitWeights; // 'colher': 25, etc.
 
   const MealItemAnalysis({
     required this.name,
+    required this.foodName,
     required this.type,
     required this.isWarning,
     required this.detail,
+    this.caloriesPer100g = 0,
+    this.unitWeights = const {},
   });
 }
 

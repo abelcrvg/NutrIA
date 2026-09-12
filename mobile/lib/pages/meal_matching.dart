@@ -6,7 +6,12 @@ String normalizeMealText(String input) {
   var value = input.toLowerCase().trim();
   const replacements = {'á':'a','à':'a','ã':'a','â':'a','ä':'a','é':'e','ê':'e','ë':'e','í':'i','ï':'i','ó':'o','ô':'o','õ':'o','ö':'o','ú':'u','ü':'u','ç':'c'};
   replacements.forEach((from,to)=>value=value.replaceAll(from,to));
-  value=value.replaceAll(RegExp(r'[^a-z0-9]+'),' ');
+
+  // Protect compound foods
+  value = value.replaceAll('batata frita', 'batata_frita');
+  value = value.replaceAll('arroz integral', 'arroz_integral');
+
+  value=value.replaceAll(RegExp(r'[^a-z0-9\s_]+'),' ');
   const aliases={'refri':'refrigerante','burguer':'hamburguer','pao':'pao'};
   return value.split(RegExp(r'\s+')).where((w)=>w.isNotEmpty).map((w)=>aliases[w]??w).join(' ');
 }
@@ -16,20 +21,35 @@ String _canonical(String input){
   return words.join('|');
 }
 
-/// Detailed analysis of each ingredient
+const Map<String, Map<String, dynamic>> FOOD_DATABASE = {
+  'arroz': {'cal_100g': 130, 'weights': {'colher': 25, 'xicara': 150}},
+  'feijao': {'cal_100g': 91, 'weights': {'colher': 30, 'concha': 120}},
+  'frango': {'cal_100g': 165, 'weights': {'pedaco': 100, 'grama': 1}},
+  'ovo': {'cal_100g': 155, 'weights': {'unidade': 50, 'ovo': 50}},
+  'batata_frita': {'cal_100g': 312, 'weights': {'porcao': 100, 'grama': 1}},
+  'miojo': {'cal_100g': 450, 'weights': {'pacote': 85, 'grama': 1}},
+  'salada': {'cal_100g': 20, 'weights': {'porcao': 100, 'grama': 1}},
+  'macarrao': {'cal_100g': 131, 'weights': {'colher': 20, 'xicara': 140}},
+  'pao': {'cal_100g': 265, 'weights': {'fatia': 30, 'unidade': 50}},
+};
+
 MealItemAnalysis _analyzeItem(String item) {
-  const carbos = {
-    'arroz', 'macarrao', 'batata', 'pao', 'tapioca', 'cuscuz', 'farofa', 'mandioca', 'milho', 'aveia', 'massa',
-    'quinoa', 'batata-doce', 'mandioquinha', 'amido', 'trigo', 'cevada', 'centeio'
+  final humanNames = {
+    'batata_frita': 'Batata Frita',
+    'arroz_integral': 'Arroz Integral',
+    'arroz': 'Arroz',
+    'feijao': 'Feijão',
+    'frango': 'Frango',
+    'ovo': 'Ovo',
+    'miojo': 'Miojo',
+    'salada': 'Salada',
+    'macarrao': 'Macarrão',
+    'pao': 'Pão',
   };
-  const proteins = {
-    'carne', 'frango', 'peixe', 'ovo', 'feijao', 'lentilha', 'grao-de-bico', 'queijo', 'leite', 'soja', 'tofu',
-    'patinho', 'coxa', 'sobrecoxa', 'atum', 'salmao', 'ricota', 'cottage', 'grão-de-bico'
-  };
-  const fibers = {
-    'salada', 'legumes', 'verduras', 'brocolis', 'alface', 'cenoura', 'abobrinha', 'tomate', 'fruta', 'banana', 'maca', 'laranja', 'espinafre',
-    'couve', 'rucula', 'acelga', 'quiabo', 'berinjela', 'chuchu', 'abobora', 'melancia', 'mamao', 'manga', 'pera', 'uva'
-  };
+
+  const carbos = {'arroz', 'macarrao', 'batata', 'pao', 'tapioca', 'cuscuz', 'farofa', 'mandioca', 'milho', 'aveia', 'massa', 'batata_frita'};
+  const proteins = {'carne', 'frango', 'peixe', 'ovo', 'feijao', 'lentilha', 'grao-de-bico', 'queijo', 'leite', 'soja', 'tofu'};
+  const fibers = {'salada', 'legumes', 'verduras', 'brocolis', 'alface', 'cenoura', 'abobrinha', 'tomate', 'fruta', 'banana', 'maca', 'laranja', 'espinafre'};
   const processed = {
     'miojo': 'Ultraprocessado: rico em sódio e glutamato monossódico, que podem causar retenção de líquidos e pressão alta.',
     'salsicha': 'Ultraprocessado: contém nitritos e nitratos, conservantes associados a riscos à saúde a longo prazo.',
@@ -37,59 +57,78 @@ MealItemAnalysis _analyzeItem(String item) {
     'refrigerante': 'Açúcar em excesso e corantes artificiais que prejudicam a saúde metabólica e a insulina.',
     'biscoito': 'Rico em farinha refinada e gorduras trans, oferecendo calorias vazias e pouca saciedade.',
     'salgadinho': 'Excesso de sódio e realçadores de sabor artificiais que sobrecarregam os rins.',
-    'presunto': 'Processado: contém excesso de sódio e conservantes como nitritos.',
-    'presunto-cotto': 'Processado: contém excesso de sódio e conservantes como nitritos.',
-    'ham': 'Processado: contém excesso de sódio e conservantes como nitritos.',
-    'ketchup': 'Ultraprocessado: rico em açúcar e xarope de milho.',
-    'maionese': 'Ultraprocessado: rico em gorduras vegetais refinadas e aditivos.',
-    'nutella': 'Ultraprocessado: excesso de açúcar e gordura vegetal hidrogenada.',
+    'batata_frita': 'Processado: alto teor de gorduras saturadas e sódio.',
   };
 
+  String foodName = humanNames[item] ?? (item.replaceAll('_', ' ').toUpperCase());
+
+  final dbInfo = FOOD_DATABASE[item];
+  final calPer100 = dbInfo != null ? (dbInfo['cal_100g'] as num).toDouble() : 0.0;
+  final weights = dbInfo != null ? Map<String, double>.from(dbInfo['weights']) : {};
+
   if (processed.containsKey(item)) {
-    return MealItemAnalysis(name: item, type: 'processed', isWarning: true, detail: processed[item]!);
+    return MealItemAnalysis(name: 'Ultraprocessado', foodName: foodName, type: 'processed', isWarning: true, detail: processed[item]!, caloriesPer100g: calPer100, unitWeights: weights);
   }
   if (proteins.contains(item)) {
-    return const MealItemAnalysis(name: 'Proteína', type: 'protein', isWarning: false, detail: 'Essencial para a construção muscular e controle da fome.');
+    return MealItemAnalysis(name: 'Proteína', foodName: foodName, type: 'protein', isWarning: false, detail: 'Essencial para a construção muscular e controle da fome.', caloriesPer100g: calPer100, unitWeights: weights);
   }
   if (carbos.contains(item)) {
-    return const MealItemAnalysis(name: 'Carboidrato', type: 'carb', isWarning: false, detail: 'Fonte primária de energia para o cérebro e músculos.');
+    return MealItemAnalysis(name: 'Carboidrato', foodName: foodName, type: 'carb', isWarning: false, detail: 'Fonte primária de energia para o cérebro e músculos.', caloriesPer100g: calPer100, unitWeights: weights);
   }
   if (fibers.contains(item)) {
-    return const MealItemAnalysis(name: 'Fibra', type: 'fiber', isWarning: false, detail: 'Essencial para a saúde intestinal e controle da glicemia.');
+    return MealItemAnalysis(name: 'Fibra', foodName: foodName, type: 'fiber', isWarning: false, detail: 'Essencial para a saúde intestinal e controle da glicemia.', caloriesPer100g: calPer100, unitWeights: weights);
   }
-  return MealItemAnalysis(name: item, type: 'unknown', isWarning: false, detail: 'Alimento identificado.');
+  return MealItemAnalysis(name: item, foodName: foodName, type: 'unknown', isWarning: false, detail: 'Alimento identificado.', caloriesPer100g: calPer100, unitWeights: weights);
 }
+
 
 /// Main analysis engine
 MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
-  final normalizedInput = normalizeMealText(input);
-  final words = normalizedInput.split(' ').where((w)=>w.isNotEmpty).toList();
+  final parts = input.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+  List<MealItemAnalysis> itemDetails = [];
+  double calculatedTotalCals = 0;
 
-  // 1. Try Catalog Match first (Supabase)
-  final catalog = FeedbackService().allFeedbacks;
-  MealFeedback? catalogFeedback;
+  for (final part in parts) {
+    // Simple parser: looks for "number unit food" or "food number unit"
+    // Example: "arroz 2 colheres" or "2 colheres de arroz"
+    final normalizedPart = normalizeMealText(part);
+    final words = normalizedPart.split(' ');
 
-  if (catalog.containsKey(normalizedInput)) {
-    catalogFeedback = catalog[normalizedInput];
-  } else {
-    // Partial matching
-    MealFeedback? best;
-    var bestScore = 0.0;
-    for (final entry in catalog.entries) {
-      final candidate = entry.key.split(' ').toSet();
-      final inputWords = words.toSet();
-      if (candidate.isEmpty || !candidate.every(inputWords.contains)) continue;
-      final score = candidate.length / inputWords.length;
-      if (score > bestScore) {
-        bestScore = score;
-        best = entry.value;
+    double qty = 1.0;
+    String unit = 'unidade';
+    String food = '';
+
+    // Try to find a number
+    int numIdx = words.indexWhere((w) => double.tryParse(w) != null);
+    if (numIdx != -1) {
+      qty = double.parse(words[numIdx]);
+      // Check if next word is a unit
+      if (numIdx + 1 < words.length) {
+        unit = words[numIdx + 1];
       }
     }
-    if (best != null && bestScore > 0.5) catalogFeedback = best;
+
+    // Determine the food name (the part that isn't a number or a common unit)
+    final commonUnits = {'colher', 'concha', 'pacote', 'unidade', 'fatia', 'porcao', 'grama', 'g'};
+    final foodWords = words.where((w) => w != (numIdx != -1 ? words[numIdx] : '') && !commonUnits.contains(w) && w != 'de').toList();
+    food = foodWords.join('_');
+
+    if (food.isEmpty) {
+      // Fallback to the whole part if we couldn't isolate a food name
+      food = normalizedPart;
+    }
+
+    final analysis = _analyzeItem(food, qty, unit);
+    itemDetails.add(analysis);
+    calculatedTotalCals += analysis.calories;
   }
 
-  // 2. Break down the meal into items
-  final itemDetails = words.map((w) => _analyzeItem(w)).toList();
+  // If input was just a list of foods without commas, handle it
+  if (itemDetails.isEmpty && input.isNotEmpty) {
+    final words = normalizeMealText(input).split(' ').where((w)=>w.isNotEmpty).toList();
+    itemDetails = words.map((w) => _analyzeItem(w, 1.0, 'unidade')).toList();
+    calculatedTotalCals = itemDetails.fold(0.0, (sum, item) => sum + item.calories);
+  }
 
   // 3. Determine Overall Status
   bool hasProcessed = itemDetails.any((i) => i.isWarning);
@@ -99,16 +138,11 @@ MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
 
   String title, status, body, improvement;
 
-  if (catalogFeedback != null) {
-    title = catalogFeedback.title;
-    status = catalogFeedback.status;
-    body = catalogFeedback.body;
-    improvement = catalogFeedback.improvement;
-  } else if (hasProcessed) {
+  if (hasProcessed) {
     title = 'Alerta de Processados';
     status = 'important';
     body = 'Sua refeição contém itens ultraprocessados. Esses alimentos geralmente possuem excesso de sódio, açúcares e gorduras artificiais que prejudicam o metabolismo.';
-    improvement = 'Tente substituir o ${itemDetails.firstWhere((i) => i.isWarning).name} por uma opção natural ou caseira para reduzir a inflamação do corpo.';
+    improvement = 'Tente substituir o ${itemDetails.firstWhere((i) => i.isWarning).foodName} por uma opção natural ou caseira para reduzir a inflamação do corpo.';
   } else if (hasProtein && hasCarb && hasFiber) {
     title = 'Prato Equilibrado!';
     status = 'positive';
@@ -142,7 +176,7 @@ MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
     overallBody: body,
     improvement: improvement,
     itemDetails: itemDetails,
-    totalCalories: calories ?? 0,
+    totalCalories: calories ?? calculatedTotalCals,
   );
 }
 
