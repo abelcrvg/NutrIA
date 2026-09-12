@@ -1,4 +1,4 @@
-import 'meal_feedback_catalog.dart';
+import '../models/meal_feedback.dart';
 
 const mealFeedbackExtras = <String, MealFeedback>{
   'arroz, feijão, frango e legumes': MealFeedback('Refeição completa com vegetais', 'positive', 'O arroz fornece carboidratos, o feijão contribui com fibras e nutrientes, o frango acrescenta proteína e os legumes aumentam a variedade de vegetais.', 'Varie os legumes e observe as porções e a quantidade de óleo usada no preparo.'),
@@ -11,4 +11,9 @@ const mealFeedbackExtras = <String, MealFeedback>{
   'arroz, frango e salada': MealFeedback('Combinação simples e variada', 'positive', 'O arroz fornece carboidratos, o frango fornece proteína e a salada acrescenta vegetais e fibras.', 'Varie as verduras e legumes e ajuste as porções ao restante do dia.'),
   'feijão, carne e legumes': MealFeedback('Boa combinação de proteína, fibras e vegetais', 'positive', 'O feijão contribui com fibras e nutrientes, a carne fornece proteína e os legumes aumentam a presença de vegetais.', 'Varie os legumes e considere uma fonte de carboidrato conforme o restante da refeição.'),
   'macarrão, frango e legumes': MealFeedback('Refeição com carboidrato, proteína e vegetais', 'positive', 'O macarrão fornece carboidratos, o frango acrescenta proteína e os legumes aumentam a variedade de vegetais.', 'Prefira preparações com quantidade moderada de óleo e molhos e varie os legumes.'),
+  'miojo, feijão': MealFeedback('Combinação com ponto de atenção', 'attention', 'O feijão acrescenta fibras, proteína vegetal e micronutrientes ao miojo. Já o macarrão instantâneo costuma concentrar bastante sódio e tem pouca variedade de vegetais.', 'Use menos tempero pronto quando possível e acrescente vegetais para aumentar a variedade da refeição.'),
+  'miojo, frango': MealFeedback('Proteína com um alimento ultraprocessado', 'attention', 'O frango acrescenta proteína ao miojo, mas o macarrão instantâneo costuma apresentar alto teor de sódio e baixa variedade nutricional.', 'Acrescente legumes e reduza o uso do tempero pronto; varie as fontes de carboidratos ao longo da semana.'),
+  'arroz, farofa': MealFeedback('Duas fontes de carboidrato', 'information', 'Arroz e farofa concentram fontes de carboidratos na mesma refeição. A farofa também pode aumentar gordura e energia dependendo do preparo.', 'Ajuste a porção de farofa ao restante do prato e inclua feijão, verduras ou legumes.'),
+  'arroz, feijão, farofa': MealFeedback('Base tradicional com atenção às porções', 'information', 'Arroz e farofa fornecem carboidratos, enquanto o feijão acrescenta fibras, proteínas vegetais e nutrientes. O conjunto pode ficar mais denso em energia conforme as porções.', 'Mantenha uma porção adequada de farofa e aumente a presença de verduras ou legumes.'),
+  'macarrão, queijo, presunto': MealFeedback('Combinação mais densa', 'attention', 'O macarrão fornece carboidratos, enquanto queijo e presunto acrescentam proteína e gordura. O presunto é um alimento processado e pode contribuir bastante para o teor de sódio.', 'Acrescente vegetais e varie as fontes de proteína, especialmente quando essa combinação for frequente.'),
 };
