@@ -6,6 +6,7 @@ class MealLog {
   final String type;
   final DateTime createdAt;
   final num? calories;
+  final List<dynamic>? ingredients;
 
   MealLog({
     required this.id,
@@ -13,6 +14,7 @@ class MealLog {
     required this.type,
     required this.createdAt,
     this.calories,
+    this.ingredients,
   });
 
   factory MealLog.fromMap(Map<String, dynamic> r) {
@@ -26,6 +28,7 @@ class MealLog {
           : 'Outra',
       createdAt: DateTime.tryParse(r['created_at']?.toString() ?? '')?.toLocal() ?? DateTime.now(),
       calories: r['calories'] as num?,
+      ingredients: r['ingredients'] as List<dynamic>?,
     );
   }
 }

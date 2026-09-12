@@ -235,9 +235,9 @@ class MealAnalysisPage extends StatelessWidget {
         }).toList(),
       });
       if (context.mounted) Navigator.pop(context, true);
-    } catch (_) {
+    } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível registrar agora. Tente novamente.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
       }
     }
   }

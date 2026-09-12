@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final rows = await supabase
           .from('meals')
-          .select('id,meal_name,meal_type,created_at,calories')
+          .select('id,meal_name,meal_type,created_at,calories,ingredients')
           .eq('user_id', supabase.auth.currentUser!.id)
           .order('created_at', ascending: false)
           .limit(100);
@@ -279,37 +279,69 @@ class _HomePageState extends State<HomePage> {
         children: [
           Text('Análise dos dias', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
-          const Text('Veja o que foi registrado e as calorias calculadas em cada dia.'),
+          const Text('Acompanhe seu equilíbrio nutricional diário.'),
           const SizedBox(height: 20),
           ...days.map((day) {
             final dm = _meals.where((m) => _sameDay(m.createdAt, day)).toList();
             final wc = dm.where((m) => m.calories != null).toList();
             final cal = wc.fold<num>(0, (s, m) => s + (m.calories ?? 0));
             final label = _sameDay(day, today) ? 'Hoje' : _formatDate(day);
+
+            // Nutritional Analysis for the day
+            bool hasProtein = false, hasCarb = false, hasFiber = false, hasWarning = false;
+            for (final meal in dm) {
+              for (final ing in meal.ingredients ?? []) {
+                if (ing is Map) {
+                  if (ing['type'] == 'protein') hasProtein = true;
+                  if (ing['type'] == 'carb') hasCarb = true;
+                  if (ing['type'] == 'fiber') hasFiber = true;
+                  if (ing['is_warning'] == true) hasWarning = true;
+                }
+              }
+            }
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: NutrIACard(
                 padding: const EdgeInsets.all(16),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(color: NutriTheme.mint, borderRadius: BorderRadius.circular(13)),
-                      child: Icon(_sameDay(day, today) ? Icons.today_outlined : Icons.calendar_today_outlined, color: NutriTheme.green),
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(color: NutriTheme.mint, borderRadius: BorderRadius.circular(13)),
+                          child: Icon(_sameDay(day, today) ? Icons.today_outlined : Icons.calendar_today_outlined, color: NutriTheme.green),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+                              const SizedBox(height: 3),
+                              Text('${dm.length} ${dm.length == 1 ? 'refeição registrada' : 'refeições registradas'}', style: Theme.of(context).textTheme.bodySmall),
+                            ],
+                          ),
+                        ),
+                        Text(wc.isEmpty ? '—' : '${cal.toStringAsFixed(0)} kcal', style: const TextStyle(fontWeight: FontWeight.w800)),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    if (dm.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
                         children: [
-                          Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
-                          const SizedBox(height: 3),
-                          Text('${dm.length} ${dm.length == 1 ? 'refeição registrada' : 'refeições registradas'}', style: Theme.of(context).textTheme.bodySmall),
+                          _NutriTag(label: 'Prot', active: hasProtein, color: Colors.orange),
+                          _NutriTag(label: 'Carb', active: hasCarb, color: Colors.blue),
+                          _NutriTag(label: 'Fibr', active: hasFiber, color: Colors.green),
+                          if (hasWarning) _NutriTag(label: 'Alerta', active: true, color: Colors.red, isWarning: true),
                         ],
                       ),
-                    ),
-                    Text(wc.isEmpty ? '—' : '${cal.toStringAsFixed(0)} kcal', style: const TextStyle(fontWeight: FontWeight.w800)),
+                    ],
                   ],
                 ),
               ),
@@ -329,6 +361,25 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _NutriTag({required String label, required bool active, required Color color, bool isWarning = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: active ? color.withValues(alpha: .2) : Colors.grey.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: active ? color : Colors.grey.withValues(alpha: .3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: active ? color : Colors.grey,
+        ),
       ),
     );
   }
