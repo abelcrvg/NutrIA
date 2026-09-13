@@ -28,10 +28,24 @@ jobs:
         run: flutter pub get
       - name: Analyze Dart
         run: flutter analyze
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Clean Flutter build
+        run: flutter clean
+      - name: Build Android APK with Gradle
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          cd ..
+          mkdir -p build/app/outputs/flutter-apk
+          APK=$(find android/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)
+          test -n "$APK"
+          cp "$APK" build/app/outputs/flutter-apk/app-release.apk
+      - name: Verify APK
+        run: |
+          test -s build/app/outputs/flutter-apk/app-release.apk
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: nutria-android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
