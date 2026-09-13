@@ -1,36 +1,9 @@
 import '../models/meal_feedback.dart';
 
-/// Real-world meal combinations: the combination itself is the unit of analysis.
-/// Ingredient order is normalized by meal_matching.dart, so equivalent orders resolve to the same feedback.
 const mealFeedbackBatch08 = <String, MealFeedback>{
-  'pão, manteiga e café': MealFeedback(
-    'Café da manhã simples',
-    'information',
-    'O pão fornece principalmente carboidratos, a manteiga acrescenta gordura e o café contribui com líquido e cafeína. Como combinação, é uma refeição prática, mas com pouca variedade de grupos alimentares e pouca proteína.',
-    'Para deixar esse café da manhã mais completo, combine o pão com ovo, queijo ou outra fonte de proteína e, quando possível, inclua uma fruta.',
-  ),
-  'pão, ovo e café com leite': MealFeedback(
-    'Café da manhã com proteína',
-    'positive',
-    'O pão fornece energia, o ovo acrescenta proteína e o café com leite contribui com proteína e outros nutrientes do leite. É uma combinação mais completa do que pão e café isoladamente.',
-    'Uma fruta pode aumentar a variedade e acrescentar fibras à refeição.',
-  ),
-  'arroz, feijão, bife, farofa e salada': MealFeedback(
-    'Prato de restaurante brasileiro',
-    'positive',
-    'Essa combinação reúne arroz e feijão, uma fonte de proteína no bife, farofa e vegetais da salada. O conjunto oferece boa variedade, embora a quantidade de farofa e o preparo do bife possam aumentar a densidade energética da refeição.',
-    'Mantenha a salada presente e ajuste principalmente as porções de farofa, frituras e molhos conforme o restante do dia.',
-  ),
-  'x-tudo, batata frita e refrigerante': MealFeedback(
-    'Combo de lanchonete',
-    'important',
-    'O x-tudo concentra pão, carnes, queijo e outros recheios, enquanto a batata frita acrescenta gordura e o refrigerante fornece açúcar quando não é zero. É uma combinação bastante densa em energia e pode ter muito sódio.',
-    'Se for uma refeição ocasional, o principal é observar a frequência. Para reduzir a carga da combinação, prefira água ou refrigerante sem açúcar e uma porção menor de fritas quando fizer sentido.',
-  ),
-  'açaí, banana, granola e leite condensado': MealFeedback(
-    'Açaí com complementos',
-    'attention',
-    'A combinação do açaí com banana e granola acrescenta carboidratos e fibras, mas o leite condensado aumenta bastante a quantidade de açúcares adicionados. A composição final depende muito do tamanho da tigela e dos complementos.',
-    'Para uma versão menos carregada, reduza o leite condensado e mantenha frutas e complementos menos açucarados.',
-  ),
+  'bife acebolado, arroz, feijão e batata frita': MealFeedback('Prato de restaurante mais denso', 'attention', 'O arroz e o feijão formam uma base tradicional, enquanto o bife acrescenta proteína. A batata frita aumenta bastante a densidade energética e de gordura da refeição.', 'Mantenha a salada ou legumes no prato e ajuste a porção de fritas conforme o restante do dia.'),
+  'frango à parmegiana, arroz e batata frita': MealFeedback('Parmegiana com bastante energia', 'attention', 'O frango fornece proteína, mas empanado, queijo, molho e batata frita tornam essa combinação mais densa em energia e gordura.', 'Uma salada ou legumes ajudam a aumentar o volume e a variedade; em outras refeições, prefira preparações menos gordurosas.'),
+  'strogonoff, arroz e batata palha': MealFeedback('Clássico de restaurante com atenção às porções', 'attention', 'O arroz fornece carboidratos e o strogonoff acrescenta proteína, mas o creme e a batata palha deixam a refeição mais concentrada em energia e gordura.', 'Inclua vegetais ou salada e mantenha uma porção moderada de batata palha.'),
+  'x-tudo, batata frita e refrigerante': MealFeedback('Combo de lanchonete bem denso', 'important', 'O X-tudo reúne pão, carne, queijo, embutidos e molhos; com batata frita e refrigerante, a refeição concentra energia, gordura, sódio e açúcar.', 'Se esse combo for ocasional, não precisa transformar uma refeição em culpa. Para equilibrar o dia, priorize água, vegetais e refeições menos processadas nas próximas ocasiões.'),
+  'temaki, hot roll e refrigerante': MealFeedback('Combo japonês com pontos de atenção', 'attention', 'O temaki pode oferecer peixe e arroz, mas o hot roll costuma ser frito e o refrigerante acrescenta açúcar sem contribuir muito para a saciedade.', 'Prefira água ou uma bebida sem açúcar e alterne itens fritos com sushi, sashimi ou outras opções menos fritas.'),
 };

@@ -2,6 +2,7 @@ import '../models/meal_feedback.dart';
 import 'meal_feedback_extra.dart';
 import 'meal_feedback_batch_06.dart';
 import 'meal_feedback_batch_07.dart';
+import 'meal_feedback_batch_08.dart';
 
 String normalizeMealText(String input) {
   var value = input.toLowerCase().trim();
@@ -20,7 +21,7 @@ String _canonical(String input) {
 }
 
 final Map<String, MealFeedback> _feedbackByCanonical = {
-  for (final entry in {...mealFeedbackExtras, ...mealFeedbackBatch06, ...mealFeedbackBatch07}.entries)
+  for (final entry in {...mealFeedbackExtras, ...mealFeedbackBatch06, ...mealFeedbackBatch07, ...mealFeedbackBatch08}.entries)
     _canonical(entry.key): entry.value,
 };
 
