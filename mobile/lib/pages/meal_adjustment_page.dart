@@ -11,7 +11,7 @@ class MealAdjustmentPage extends StatefulWidget {
     super.key,
     required this.mealName,
     required this.mealType,
-    required this.items
+    required this.items,
   });
 
   @override
@@ -20,12 +20,12 @@ class MealAdjustmentPage extends StatefulWidget {
 
 class _MealAdjustmentPageState extends State<MealAdjustmentPage> {
   late List<Map<String, dynamic>> _adjustableItems;
+  late List<TextEditingController> _quantityControllers;
 
   @override
   void initState() {
     super.initState();
     _adjustableItems = widget.items.map((item) {
-      // Find default unit if possible
       String defaultUnit = 'unidade';
       if (item.unitWeights.isNotEmpty) {
         defaultUnit = item.unitWeights.keys.first;
@@ -36,6 +36,18 @@ class _MealAdjustmentPageState extends State<MealAdjustmentPage> {
         'unit': defaultUnit,
       };
     }).toList();
+    _quantityControllers = List.generate(
+      _adjustableItems.length,
+      (_) => TextEditingController(text: '1'),
+    );
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _quantityControllers) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   double _calculateTotalCalories() {
@@ -44,7 +56,6 @@ class _MealAdjustmentPageState extends State<MealAdjustmentPage> {
       final analysis = item['analysis'] as MealItemAnalysis;
       final qty = item['quantity'] as double;
       final unit = item['unit'] as String;
-
       final weightPerUnit = analysis.unitWeights[unit] ?? 1.0;
       final totalGrams = qty * weightPerUnit;
       total += (totalGrams * analysis.caloriesPer100g) / 100;
@@ -52,7 +63,27 @@ class _MealAdjustmentPageState extends State<MealAdjustmentPage> {
     return total;
   }
 
+  void _setQuantity(int index, double value) {
+    final quantity = value.clamp(0.5, 99.0).toDouble();
+    setState(() {
+      _adjustableItems[index]['quantity'] = quantity;
+      _quantityControllers[index].text = quantity % 1 == 0
+          ? quantity.toStringAsFixed(0)
+          : quantity.toStringAsFixed(1);
+      _quantityControllers[index].selection = TextSelection.collapsed(
+        offset: _quantityControllers[index].text.length,
+      );
+    });
+  }
+
+  void _changeQuantity(int index, double delta) {
+    final current = _adjustableItems[index]['quantity'] as double;
+    _setQuantity(index, current + delta);
+  }
+
   void _removeItem(int index) {
+    final controller = _quantityControllers.removeAt(index);
+    controller.dispose();
     setState(() => _adjustableItems.removeAt(index));
   }
 
@@ -77,44 +108,128 @@ class _MealAdjustmentPageState extends State<MealAdjustmentPage> {
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            flex: 3,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(analysis.foodName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                Text(analysis.name, style: Theme.of(context).textTheme.bodySmall),
-                              ],
-                            ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      analysis.foodName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      analysis.name,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Remover alimento',
+                                icon: const Icon(
+                                  Icons.remove_circle_outline,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () => _removeItem(index),
+                              ),
+                            ],
                           ),
-                          Expanded(
-                            flex: 2,
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 50,
-                                  child: TextField(
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    decoration: const InputDecoration(hintText: '1'),
-                                    onChanged: (v) => setState(() => item['quantity'] = double.tryParse(v) ?? 1.0),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 72,
+                                child: TextField(
+                                  controller: _quantityControllers[index],
+                                  keyboardType: const TextInputType.numberWithOptions(
+                                    decimal: true,
                                   ),
+                                  textAlign: TextAlign.center,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Qtd.',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                  onChanged: (value) {
+                                    final parsed = double.tryParse(
+                                      value.replaceAll(',', '.'),
+                                    );
+                                    if (parsed != null && parsed > 0) {
+                                      _adjustableItems[index]['quantity'] = parsed;
+                                      setState(() {});
+                                    }
+                                  },
                                 ),
-                                const SizedBox(width: 8),
-                                DropdownButton<String>(
-                                  value: item['unit'],
-                                  isDense: true,
-                                  items: analysis.unitWeights.keys.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
-                                  onChanged: (v) => setState(() => item['unit'] = v!),
+                              ),
+                              const SizedBox(width: 4),
+                              Container(
+                                height: 48,
+                                width: 36,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Theme.of(context).dividerColor,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                            onPressed: () => _removeItem(index),
+                                child: Column(
+                                  children: [
+                                    Expanded(
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        tooltip: 'Aumentar quantidade',
+                                        icon: const Icon(Icons.keyboard_arrow_up, size: 20),
+                                        onPressed: () => _changeQuantity(index, 0.5),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        tooltip: 'Diminuir quantidade',
+                                        icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                                        onPressed: () => _changeQuantity(index, -0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: item['unit'],
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Unidade',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                  items: analysis.unitWeights.keys
+                                      .map(
+                                        (u) => DropdownMenuItem(
+                                          value: u,
+                                          child: Text(
+                                            u,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (v) {
+                                    if (v != null) {
+                                      setState(() => item['unit'] = v);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -126,16 +241,33 @@ class _MealAdjustmentPageState extends State<MealAdjustmentPage> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .3),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withValues(alpha: .3),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total Estimado:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                      Text('${totalCals.toStringAsFixed(0)} kcal', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900, color: NutriTheme.green)),
+                      const Text(
+                        'Total Estimado:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '${totalCals.toStringAsFixed(0)} kcal',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: NutriTheme.green,
+                            ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -143,8 +275,6 @@ class _MealAdjustmentPageState extends State<MealAdjustmentPage> {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: () {
-                        // Recalculate final analysis based on adjusted totals
-                        // We pass the total calories to the analysis page
                         Navigator.push(
                           context,
                           MaterialPageRoute(
