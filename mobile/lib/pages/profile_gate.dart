@@ -11,12 +11,27 @@ class ProfileGate extends StatefulWidget {
 }
 
 class _ProfileGateState extends State<ProfileGate> {
+  late Future<bool> _profileReady;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileReady = _checkProfile();
+  }
+
   Future<bool> _checkProfile() async {
     final user = supabase.auth.currentUser;
     if (user == null) return false;
     try {
-      final row = await supabase.from('profiles').select('height_cm,weight_kg,goal').eq('id', user.id).maybeSingle();
-      return row != null && row['height_cm'] != null && row['weight_kg'] != null && row['goal'] != null;
+      final row = await supabase
+          .from('profiles')
+          .select('height_cm,weight_kg,goal')
+          .eq('id', user.id)
+          .maybeSingle();
+      return row != null &&
+          row['height_cm'] != null &&
+          row['weight_kg'] != null &&
+          row['goal'] != null;
     } catch (_) {
       return true;
     }
@@ -25,10 +40,14 @@ class _ProfileGateState extends State<ProfileGate> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: _checkProfile(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        return snapshot.data == true ? const HomePage() : const OnboardingPage();
+      future: _profileReady,
+      builder: (context, s) {
+        if (!s.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return s.data! ? const HomePage() : const OnboardingPage();
       },
     );
   }
