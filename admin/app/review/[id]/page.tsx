@@ -1,0 +1,29 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { supabase } from '../../../lib/supabase';
+
+type Form = Record<string,string>;
+const fields=[['product_name','Produto'],['brand','Marca'],['serving_size','Porção'],['serving_unit','Unidade da porção'],['calories','Calorias'],['carbohydrates','Carboidratos'],['sugars_total','Açúcares totais'],['sugars_added','Açúcares adicionados'],['protein','Proteínas'],['total_fat','Gorduras totais'],['saturated_fat','Gorduras saturadas'],['fiber','Fibras'],['sodium','Sódio'],['ingredients','Ingredientes']];
+
+export default function ReviewPage(){
+ const params=useParams<{id:string}>(); const id=params.id; const [form,setForm]=useState<Form>({}); const [submission,setSubmission]=useState<any>(null); const [loading,setLoading]=useState(true); const [saving,setSaving]=useState(false); const [message,setMessage]=useState(''); const [error,setError]=useState('');
+ useEffect(()=>{(async()=>{const {data:{session}}=await supabase.auth.getSession();if(!session){window.location.href='/';return;}const {data:profile}=await supabase.from('profiles').select('is_admin').eq('id',session.user.id).maybeSingle();if(!profile?.is_admin){await supabase.auth.signOut();window.location.href='/';return;}const {data,error}=await supabase.from('product_submissions').select('*').eq('id',id).single();if(error||!data){setError(error?.message??'Submissão não encontrada.');setLoading(false);return;}setSubmission(data);const extracted=(data.extracted_data??{}) as Record<string,unknown>;const initial:Form={};for(const [key] of fields)initial[key]=extracted[key] == null ? '' : String(extracted[key]);setForm(initial);setLoading(false);})();},[id]);
+ function change(key:string,value:string){setForm(prev=>({...prev,[key]:value}));}
+ async function decide(status:'validated'|'rejected'){
+   setSaving(true);setError('');setMessage('');const {data:{session}}=await supabase.auth.getSession();if(!session){window.location.href='/';return;}
+   if(status==='rejected'){const r=await supabase.from('product_submissions').update({status:'rejected',validation_notes:form.validation_notes??'',reviewed_at:new Date().toISOString()}).eq('id',id);if(r.error)setError(r.error.message);else setMessage('Submissão rejeitada.');setSaving(false);return;}
+   const numeric=(key:string)=>form[key]?Number(form[key]):null;
+   const product={barcode:submission.barcode,product_name:form.product_name||'Produto sem nome',brand:form.brand||null,serving_size:numeric('serving_size'),serving_unit:form.serving_unit||null,calories:numeric('calories'),carbohydrates:numeric('carbohydrates'),sugars_total:numeric('sugars_total'),sugars_added:numeric('sugars_added'),protein:numeric('protein'),total_fat:numeric('total_fat'),saturated_fat:numeric('saturated_fat'),fiber:numeric('fiber'),sodium:numeric('sodium'),ingredients:form.ingredients||null,source:'nutria_user_submission',validation_status:'validated',submitted_by:submission.submitted_by,validated_at:new Date().toISOString()};
+   const existing=await supabase.from('product_catalog').select('id').eq('barcode',submission.barcode).maybeSingle();let result;
+   if(existing.data) result=await supabase.from('product_catalog').update(product).eq('id',existing.data.id); else result=await supabase.from('product_catalog').insert(product);
+   if(result.error){setError(result.error.message);setSaving(false);return;}
+   const r=await supabase.from('product_submissions').update({status:'validated',validation_notes:form.validation_notes??'',reviewed_at:new Date().toISOString()}).eq('id',id);if(r.error)setError(r.error.message);else setMessage('Produto aprovado e publicado no catálogo.');setSaving(false);
+ }
+ if(loading)return <main className="content"><p>Carregando revisão…</p></main>; if(error&&!submission)return <main className="content"><Link className="back" href="/dashboard">← Dashboard</Link><div className="error">{error}</div></main>;
+ return <div className="shell"><header className="topbar"><div className="brand">Nutr<span>IA</span> Admin</div><Link className="btn secondary" href="/dashboard">Dashboard</Link></header><main className="content"><Link className="back" href="/dashboard">← Voltar</Link><h1 className="title">Revisar produto</h1><p className="muted">EAN: {submission.barcode}</p>{message&&<div style={{background:'#ecfdf3',color:'#027a48',padding:12,borderRadius:10,margin:'16px 0'}}>{message}</div>}{error&&<div className="error">{error}</div>}
+ <div className="reviewgrid"><section className="card"><h2 className="section-title">Evidência enviada</h2><div className="photo">{submission.photo_path?.startsWith('http')?<img src={submission.photo_path} alt="Tabela nutricional enviada" style={{maxWidth:'100%',maxHeight:600,objectFit:'contain'}}/>:<div><strong>Foto da tabela nutricional</strong><p>{submission.photo_path||'Nenhuma foto disponível.'}</p><small>A integração com o Storage será usada quando o bucket de evidências estiver configurado.</small></div>}</div></section>
+ <section className="card"><h2 className="section-title">Dados para validação</h2>{fields.map(([key,label])=><div className="field" key={key}><label>{label}</label><input value={form[key]??''} onChange={e=>change(key,e.target.value)} inputMode={['product_name','brand','serving_unit','ingredients'].includes(key)?'text':'decimal'}/></div>)}<div className="field"><label>Observações do revisor</label><textarea rows={4} value={form.validation_notes??''} onChange={e=>change('validation_notes',e.target.value)} /></div><div className="actions"><button className="btn success" disabled={saving} onClick={()=>decide('validated')}>{saving?'Salvando…':'Aprovar e publicar'}</button><button className="btn danger" disabled={saving} onClick={()=>decide('rejected')}>Rejeitar</button></div></section></div></main></div>;
+}
