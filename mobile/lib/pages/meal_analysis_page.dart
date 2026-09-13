@@ -23,15 +23,9 @@ class MealAnalysisPage extends StatelessWidget {
         'calories': report.totalCalories.toDouble(),
         'source': 'manual',
         'ingredients': report.itemDetails.map((item) => {
-          'name': item.foodName,
-          'type': item.type,
-          'is_warning': item.isWarning,
-          'detail': item.detail,
-          'calories': item.calories,
-          'protein': item.protein,
-          'carbs': item.carbs,
-          'fat': item.fat,
-          'fiber': item.fiber,
+          'name': item.foodName, 'type': item.type, 'is_warning': item.isWarning,
+          'detail': item.detail, 'calories': item.calories, 'protein': item.protein,
+          'carbs': item.carbs, 'fat': item.fat, 'fiber': item.fiber,
         }).toList(),
       });
       if (context.mounted) Navigator.pop(context, true);
@@ -40,26 +34,32 @@ class MealAnalysisPage extends StatelessWidget {
     }
   }
 
-  Widget _macro(BuildContext context, String label, String value, IconData icon) => Expanded(
-    child: Container(
+  Widget _macro(BuildContext context, String label, String value, IconData icon) {
+    return Expanded(child: Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: NutriTheme.mint, borderRadius: BorderRadius.circular(14)),
       child: Column(children: [Icon(icon, size: 20, color: NutriTheme.green), const SizedBox(height: 5), Text(value, style: const TextStyle(fontWeight: FontWeight.w800)), const SizedBox(height: 2), Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center)]),
-    ),
-  );
-
-  IconData _feedbackIcon(String status) {
-    switch (status) {
-      case 'positive': return Icons.check_circle_outline;
-      case 'warning': return Icons.warning_amber_outlined;
-      case 'attention': return Icons.info_outline;
-      default: return Icons.auto_awesome_outlined;
-    }
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     final report = reportFromItems(mealName, items, calories);
+    final detailCards = report.itemDetails.map((item) => Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: NutrIACard(padding: const EdgeInsets.all(13), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(item.isWarning ? Icons.warning_amber_outlined : Icons.check_circle_outline, color: item.isWarning ? Colors.orange : NutriTheme.green),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(item.foodName, style: const TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 3),
+          Text(item.detail, style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35)),
+          const SizedBox(height: 4),
+          Text('${item.calories.toStringAsFixed(0)} kcal • P ${item.protein.toStringAsFixed(1)}g • C ${item.carbs.toStringAsFixed(1)}g • G ${item.fat.toStringAsFixed(1)}g • F ${item.fiber.toStringAsFixed(1)}g', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+        ])),
+      ])),
+    )).toList();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Análise NutrIA')),
       body: SafeArea(child: ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 32), children: [
@@ -68,10 +68,15 @@ class MealAnalysisPage extends StatelessWidget {
         Text(mealType),
         const SizedBox(height: 18),
         NutrIACard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [Icon(_feedbackIcon(report.overallStatus), color: NutriTheme.green, size: 30), const SizedBox(width: 12), Expanded(child: Text(report.overallTitle, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)))]),
+          Row(children: [Icon(feedbackIcon(report.overallStatus), color: NutriTheme.green, size: 30), const SizedBox(width: 12), Expanded(child: Text(report.overallTitle, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)))]),
           const SizedBox(height: 14),
           Text(report.overallBody, style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.5)),
-          if (report.improvement.isNotEmpty) ...[const SizedBox(height: 16), Text('Como melhorar', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)), const SizedBox(height: 6), Text(report.improvement, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45))],
+          if (report.improvement.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text('Como melhorar', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text(report.improvement, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45)),
+          ],
         ])),
         const SizedBox(height: 20),
         Text('Resumo nutricional', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
@@ -82,8 +87,7 @@ class MealAnalysisPage extends StatelessWidget {
         const SizedBox(height: 20),
         Text('Composição da refeição', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 10),
-        ...report.itemDetails.map((item) => Padding(padding: const EdgeInsets.only(bottom: 10), child: NutrIACard(padding: const EdgeInsets.all(13), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(item.isWarning ? Icons.warning_amber_outlined : Icons.check_circle_outline, color: item.isWarning ? Colors.orange : NutriTheme.green), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.foodName, style: const TextStyle(fontWeight: FontWeight.w700)), const SizedBox(height: 3), Text(item.detail, style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35)), const SizedBox(height: 4), Text('${item.calories.toStringAsFixed(0)} kcal • P ${item.protein.toStringAsFixed(1)}g • C ${item.carbs.toStringAsFixed(1)}g • G ${item.fat.toStringAsFixed(1)}g • F ${item.fiber.toStringAsFixed(1)}g', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700))]))]))),
-        const SizedBox(height: 8),
+        ...detailCards,
         NutrIACard(child: Row(children: [const Icon(Icons.local_fire_department_outlined, color: Colors.orange), const SizedBox(width: 10), Expanded(child: Text(report.totalCalories > 0 ? '${report.totalCalories.toStringAsFixed(0)} kcal estimadas' : 'Calorias não informadas', style: const TextStyle(fontWeight: FontWeight.w800)))])),
         const SizedBox(height: 18),
         FilledButton.icon(onPressed: () => _add(context, report), icon: const Icon(Icons.check), label: const Text('Adicionar ao meu dia')),
