@@ -8,35 +8,30 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: mobile
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
+          flutter-version: '3.47.4'
           channel: 'stable'
           cache: true
-
       - name: Install dependencies
-        run: |
-          cd mobile
-          flutter pub get
-
+        run: flutter pub get
+      - name: Analyze Dart
+        run: flutter analyze
       - name: Build APK
-        run: |
-          cd mobile
-          flutter build apk --release
-
+        run: flutter build apk --release
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: nutr-ia-apk
-          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          name: nutria-android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
