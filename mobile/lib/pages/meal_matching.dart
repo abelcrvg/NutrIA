@@ -8,7 +8,7 @@ String normalizeMealText(String input) {
   const replacements = {'á':'a','à':'a','ã':'a','â':'a','ä':'a','é':'e','ê':'e','ë':'e','í':'i','ï':'i','ó':'o','ô':'o','õ':'o','ö':'o','ú':'u','ü':'u','ç':'c'};
   replacements.forEach((from, to) => value = value.replaceAll(from, to));
   value = value.replaceAll('batata frita', 'batata_frita').replaceAll('arroz integral', 'arroz_integral').replaceAll('batata doce', 'batata-doce');
-  const aliases = {'refri':'refrigerante','burguer':'hamburguer','burguer':'hamburguer','paes':'pao','ovos':'ovo','feijoes':'feijao'};
+  const aliases = {'refri':'refrigerante','burguer':'hamburguer','paes':'pao','ovos':'ovo','feijoes':'feijao'};
   const ignored = {'e','com','de','da','do','das','dos'};
   value = value.replaceAll(RegExp(r'[^a-z0-9\s_-]+'), ' ');
   return value.split(RegExp(r'\s+')).where((w) => w.isNotEmpty && !ignored.contains(w)).map((w) => aliases[w] ?? w).join(' ');
@@ -67,56 +67,39 @@ MealItemAnalysis analyzeFoodItem(String food, double qty, String unit) {
   const processed = {'miojo':'Ultraprocessado: rico em sódio e com baixa variedade de alimentos.','salsicha':'Alimento processado que pode ter alto teor de sódio.','nugget':'Ultraprocessado que costuma combinar farinha, gordura e sódio.','refrigerante':'Bebida açucarada com pouco valor nutricional.','biscoito':'Pode concentrar farinha refinada, gordura e/ou açúcar.','salgadinho':'Geralmente rico em sódio e gordura.','batata_frita':'Preparação geralmente mais densa em energia, gordura e sódio.'};
   final db = foodDatabase[key];
   final weights = db == null ? <String,double>{} : (db['weights'] as Map).map((k,v) => MapEntry(k.toString(), (v as num).toDouble()));
-  final grams = qty * (weights[unit] ?? (weights.isEmpty ? 1.0 : weights.values.first));
-  final factor = grams / 100.0;
-  final cal = db == null ? 0.0 : (db['cal_100g'] as num).toDouble() * factor;
+  final factor = qty * (weights[unit] ?? (weights.isEmpty ? 1.0 : weights.values.first)) / 100.0;
+  num value(String field) => db == null ? 0 : (db[field] as num? ?? 0);
   final type = processed.containsKey(key) ? 'processed' : proteins.contains(key) ? 'protein' : carbos.contains(key) ? 'carb' : fibers.contains(key) ? 'fiber' : 'unknown';
   final detail = processed[key] ?? (type == 'protein' ? 'Fonte de proteína que contribui para manutenção muscular e saciedade.' : type == 'carb' ? 'Fonte de energia para o organismo.' : type == 'fiber' ? 'Contribui para a saúde intestinal e maior saciedade.' : 'Alimento identificado.');
   final name = humanNames[key] ?? (food.isEmpty ? 'Alimento' : food[0].toUpperCase() + food.substring(1));
-  num value(String field) => db == null ? 0 : (db[field] as num? ?? 0);
-  return MealItemAnalysis(name: type == 'processed' ? 'Ultraprocessado' : type == 'protein' ? 'Proteína' : type == 'carb' ? 'Carboidrato' : type == 'fiber' ? 'Fibra' : 'Alimento', foodName: name, type: type, isWarning: processed.containsKey(key), detail: detail, caloriesPer100g: db == null ? 0 : db['cal_100g'] as num, unitWeights: weights, actualCalories: cal, actualProtein: value('protein') * factor, actualCarbs: value('carbs') * factor, actualFat: value('fat') * factor, actualFiber: value('fiber') * factor);
+  return MealItemAnalysis(name:type == 'processed' ? 'Ultraprocessado' : type == 'protein' ? 'Proteína' : type == 'carb' ? 'Carboidrato' : type == 'fiber' ? 'Fibra' : 'Alimento', foodName:name, type:type, isWarning:processed.containsKey(key), detail:detail, caloriesPer100g:db == null ? 0 : db['cal_100g'] as num, unitWeights:weights, actualCalories:value('cal_100g').toDouble()*factor, actualProtein:value('protein').toDouble()*factor, actualCarbs:value('carbs').toDouble()*factor, actualFat:value('fat').toDouble()*factor, actualFiber:value('fiber').toDouble()*factor);
 }
 
 double portionStep(String unit) => (unit == 'grama' || unit == 'g') ? 10 : 1;
 
 MealAnalysisReport reportFromItems(String input, List<MealItemAnalysis> items, num? calories) {
-  final protein = items.fold<double>(0, (s,i) => s+i.protein);
-  final carbs = items.fold<double>(0, (s,i) => s+i.carbs);
-  final fat = items.fold<double>(0, (s,i) => s+i.fat);
-  final fiber = items.fold<double>(0, (s,i) => s+i.fiber);
-  final total = items.fold<double>(0, (s,i) => s+i.calories);
-  final catalog = _feedbackByCanonical[_canonical(items.map((i) => i.foodName).join(' '))];
-  if (catalog != null) return MealAnalysisReport(overallTitle: catalog.title, overallStatus: catalog.status, overallBody: catalog.body, improvement: catalog.improvement, itemDetails: items, totalCalories: calories ?? total, protein: protein, carbs: carbs, fat: fat, fiber: fiber);
-  final hasProcessed = items.any((i) => i.isWarning), hasProtein = items.any((i) => i.type == 'protein'), hasCarb = items.any((i) => i.type == 'carb'), hasFiber = items.any((i) => i.type == 'fiber');
-  String title, status, body, improvement;
-  if (hasProcessed) { title='Alerta de Processados'; status='important'; body='Sua refeição contém um alimento processado ou ultraprocessado. Observe especialmente sódio, açúcares e gorduras conforme o produto.'; improvement='Quando possível, combine com alimentos in natura e varie as fontes de proteína e vegetais.'; }
-  else if (hasProtein && hasCarb && hasFiber) { title='Prato Equilibrado!'; status='positive'; body='A refeição combina fonte de energia, proteína e alimentos vegetais ricos em fibras.'; improvement='Varie os legumes e verduras e ajuste as porções ao seu contexto alimentar.'; }
-  else if (!hasProtein) { title='Falta Proteína'; status='attention'; body='A refeição fornece energia, mas não foi identificada uma fonte clara de proteína.'; improvement='Considere ovos, frango, peixe, tofu ou leguminosas.'; }
-  else if (!hasFiber) { title='Faltam Fibras'; status='attention'; body='Há uma fonte de proteína, mas faltam alimentos vegetais ricos em fibras na combinação identificada.'; improvement='Adicione salada, legumes, verduras ou uma fruta.'; }
-  else if (!hasCarb) { title='Baixo Carboidrato'; status='information'; body='A combinação identificada tem proteína e/ou fibras, mas pouca fonte de carboidrato.'; improvement='Se fizer sentido para sua alimentação, inclua uma porção de arroz, batata, mandioca ou outro carboidrato.'; }
-  else { title='Análise Geral'; status='information'; body='Analisamos os alimentos identificados na refeição.'; improvement='Varie grupos alimentares e ajuste as porções ao longo do dia.'; }
-  return MealAnalysisReport(overallTitle:title, overallStatus:status, overallBody:body, improvement:improvement, itemDetails:items, totalCalories:calories ?? total, protein:protein, carbs:carbs, fat:fat, fiber:fiber);
+  final protein = items.fold<double>(0,(s,i)=>s+i.protein), carbs = items.fold<double>(0,(s,i)=>s+i.carbs), fat = items.fold<double>(0,(s,i)=>s+i.fat), fiber = items.fold<double>(0,(s,i)=>s+i.fiber), total = items.fold<double>(0,(s,i)=>s+i.calories);
+  final catalog = _feedbackByCanonical[_canonical(items.map((i)=>i.foodName).join(' '))];
+  if (catalog != null) return MealAnalysisReport(overallTitle:catalog.title, overallStatus:catalog.status, overallBody:catalog.body, improvement:catalog.improvement, itemDetails:items, totalCalories:calories ?? total, protein:protein, carbs:carbs, fat:fat, fiber:fiber);
+  final hasProcessed=items.any((i)=>i.isWarning), hasProtein=items.any((i)=>i.type=='protein'), hasCarb=items.any((i)=>i.type=='carb'), hasFiber=items.any((i)=>i.type=='fiber');
+  String title,status,body,improvement;
+  if(hasProcessed){title='Alerta de Processados';status='important';body='Sua refeição contém um alimento processado ou ultraprocessado. Observe especialmente sódio, açúcares e gorduras conforme o produto.';improvement='Quando possível, combine com alimentos in natura e varie as fontes de proteína e vegetais.';} else if(hasProtein&&hasCarb&&hasFiber){title='Prato Equilibrado!';status='positive';body='A refeição combina fonte de energia, proteína e alimentos vegetais ricos em fibras.';improvement='Varie os legumes e verduras e ajuste as porções ao seu contexto alimentar.';} else if(!hasProtein){title='Falta Proteína';status='attention';body='A refeição fornece energia, mas não foi identificada uma fonte clara de proteína.';improvement='Considere ovos, frango, peixe, tofu ou leguminosas.';} else if(!hasFiber){title='Faltam Fibras';status='attention';body='Há uma fonte de proteína, mas faltam alimentos vegetais ricos em fibras na combinação identificada.';improvement='Adicione salada, legumes, verduras ou uma fruta.';} else if(!hasCarb){title='Baixo Carboidrato';status='information';body='A combinação identificada tem proteína e/ou fibras, mas pouca fonte de carboidrato.';improvement='Se fizer sentido para sua alimentação, inclua uma porção de arroz, batata, mandioca ou outro carboidrato.';} else {title='Análise Geral';status='information';body='Analisamos os alimentos identificados na refeição.';improvement='Varie grupos alimentares e ajuste as porções ao longo do dia.';}
+  return MealAnalysisReport(overallTitle:title,overallStatus:status,overallBody:body,improvement:improvement,itemDetails:items,totalCalories:calories ?? total,protein:protein,carbs:carbs,fat:fat,fiber:fiber);
 }
 
 MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
-  final normalized = normalizeMealText(input);
-  final parts = normalized.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
-  const units = {'colher','concha','pacote','unidade','fatia','porcao','grama','g','xicara','pedaco','ovo','bife','file','pote'};
-  final items = <MealItemAnalysis>[];
-  for (final part in parts) {
-    final words = part.split(RegExp(r'\s+'));
-    final numberIndex = words.indexWhere((w) => double.tryParse(w) != null);
-    final qty = numberIndex >= 0 ? double.parse(words[numberIndex]) : 1.0;
-    final unit = numberIndex >= 0 && numberIndex + 1 < words.length && units.contains(words[numberIndex + 1]) ? words[numberIndex + 1] : 'unidade';
-    final foods = words.where((w) => (numberIndex < 0 || w != words[numberIndex]) && !units.contains(w)).toList();
-    for (final food in foods) items.add(analyzeFoodItem(food, foods.length == 1 ? qty : 1, foods.length == 1 ? unit : 'unidade'));
+  final normalized=normalizeMealText(input);
+  final parts=normalized.split(',').map((s)=>s.trim()).where((s)=>s.isNotEmpty).toList();
+  const units={'colher','concha','pacote','unidade','fatia','porcao','grama','g','xicara','pedaco','ovo','bife','file','pote'};
+  final items=<MealItemAnalysis>[];
+  for(final part in parts){
+    final words=part.split(RegExp(r'\s+'));
+    final numberIndex=words.indexWhere((w)=>double.tryParse(w)!=null);
+    final qty=numberIndex>=0?double.parse(words[numberIndex]):1.0;
+    final unit=numberIndex>=0&&numberIndex+1<words.length&&units.contains(words[numberIndex+1])?words[numberIndex+1]:'unidade';
+    final foods=words.where((w)=>(numberIndex<0||w!=words[numberIndex])&&!units.contains(w)).toList();
+    for(final food in foods){items.add(analyzeFoodItem(food,foods.length==1?qty:1,foods.length==1?unit:'unidade'));}
   }
-  if (items.isEmpty) {
-    for (final food in normalized.split(' ').where((w) => w.isNotEmpty && !units.contains(w))) items.add(analyzeFoodItem(food, 1, 'unidade'));
-  }
-  return reportFromItems(input, items, calories);
-}
-
-IconData feedbackIcon(String status) {
-  switch (status) { case 'positive': return Icons.check_circle_outline; case 'attention': return Icons.warning_amber_outlined; case 'important': return Icons.error_outline; default: return Icons.info_outline; }
+  if(items.isEmpty){for(final food in normalized.split(' ').where((w)=>w.isNotEmpty&&!units.contains(w))) items.add(analyzeFoodItem(food,1,'unidade'));}
+  return reportFromItems(input,items,calories);
 }
