@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../supabase_config.dart';
 import '../theme.dart';
+import '../models/meal_feedback.dart';
 import 'meal_matching.dart';
 
 class MealAnalysisPage extends StatelessWidget {
@@ -39,8 +40,21 @@ class MealAnalysisPage extends StatelessWidget {
     }
   }
 
-  Widget _macro(BuildContext context, String label, String value, IconData icon) {
-    return Expanded(child: Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: NutriTheme.mint, borderRadius: BorderRadius.circular(14)), child: Column(children: [Icon(icon, size: 20, color: NutriTheme.green), const SizedBox(height: 5), Text(value, style: const TextStyle(fontWeight: FontWeight.w800)), const SizedBox(height: 2), Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center)])));
+  Widget _macro(BuildContext context, String label, String value, IconData icon) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: NutriTheme.mint, borderRadius: BorderRadius.circular(14)),
+      child: Column(children: [Icon(icon, size: 20, color: NutriTheme.green), const SizedBox(height: 5), Text(value, style: const TextStyle(fontWeight: FontWeight.w800)), const SizedBox(height: 2), Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center)]),
+    ),
+  );
+
+  IconData _feedbackIcon(String status) {
+    switch (status) {
+      case 'positive': return Icons.check_circle_outline;
+      case 'warning': return Icons.warning_amber_outlined;
+      case 'attention': return Icons.info_outline;
+      default: return Icons.auto_awesome_outlined;
+    }
   }
 
   @override
@@ -54,7 +68,7 @@ class MealAnalysisPage extends StatelessWidget {
         Text(mealType),
         const SizedBox(height: 18),
         NutrIACard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [Icon(feedbackIcon(report.overallStatus), color: NutriTheme.green, size: 30), const SizedBox(width: 12), Expanded(child: Text(report.overallTitle, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)))]),
+          Row(children: [Icon(_feedbackIcon(report.overallStatus), color: NutriTheme.green, size: 30), const SizedBox(width: 12), Expanded(child: Text(report.overallTitle, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)))]),
           const SizedBox(height: 14),
           Text(report.overallBody, style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.5)),
           if (report.improvement.isNotEmpty) ...[const SizedBox(height: 16), Text('Como melhorar', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)), const SizedBox(height: 6), Text(report.improvement, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45))],
