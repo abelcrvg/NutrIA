@@ -24,7 +24,7 @@ final Map<String, MealFeedback> _feedbackByCanonical = {
   for (final entry in mealFeedbackExtras.entries) _canonical(entry.key): entry.value,
 };
 
-const Map<String, Map<String, dynamic>> FOOD_DATABASE = {
+const Map<String, Map<String, dynamic>> foodDatabase = {
   'arroz': {'cal_100g': 130, 'weights': {'colher': 25.0, 'xicara': 150.0, 'grama': 1.0}},
   'arroz_integral': {'cal_100g': 123, 'weights': {'colher': 25.0, 'xicara': 150.0, 'grama': 1.0}},
   'feijao': {'cal_100g': 91, 'weights': {'colher': 30.0, 'concha': 120.0, 'grama': 1.0}},
@@ -44,7 +44,7 @@ MealItemAnalysis _analyzeItem(String item, double qty, String unit) {
   const fibers={'salada','legumes','verduras','brocolis','alface','cenoura','abobrinha','tomate','fruta','banana','maca','laranja','espinafre','abobora','abacate'};
   const processed={'miojo':'Ultraprocessado: rico em sódio e com baixa variedade de alimentos.','salsicha':'Alimento processado que pode ter alto teor de sódio.','nugget':'Ultraprocessado que costuma combinar farinha, gordura e sódio.','refrigerante':'Bebida açucarada com pouco valor nutricional.','biscoito':'Pode concentrar farinha refinada, gordura e/ou açúcar.','salgadinho':'Geralmente rico em sódio e gordura.','batata_frita':'Preparação geralmente mais densa em energia, gordura e sódio.'};
   final foodName=humanNames[item]??item.replaceAll('_',' ').toUpperCase();
-  final dbInfo=FOOD_DATABASE[item];
+  final dbInfo=foodDatabase[item];
   final calPer100=dbInfo!=null?(dbInfo['cal_100g'] as num).toDouble():0.0;
   final Map<String,double> weights=dbInfo==null?<String,double>{}:(dbInfo['weights'] as Map).map((key,value)=>MapEntry(key.toString(),(value as num).toDouble()));
   final finalCalories=dbInfo==null?0.0:(qty*(weights[unit]??1.0)*calPer100)/100;
@@ -71,23 +71,16 @@ MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
     if(numIdx!=-1 && numIdx+1<words.length && commonUnits.contains(words[numIdx+1])) unit=words[numIdx+1];
     final foodWords=words.where((w)=>!double.tryParse(w).toString().contains('true') && (numIdx==-1 || w!=words[numIdx]) && !commonUnits.contains(w)).toList();
     if(foodWords.length==1){parsedFoods.add(foodWords.first);final a=_analyzeItem(foodWords.first,qty,unit);itemDetails.add(a);calculatedTotalCals+=a.calories;}
-    else if(foodWords.length>1){
-      for(final food in foodWords){parsedFoods.add(food);final a=_analyzeItem(food,1.0,'unidade');itemDetails.add(a);calculatedTotalCals+=a.calories;}
-    }
+    else if(foodWords.length>1){for(final food in foodWords){parsedFoods.add(food);final a=_analyzeItem(food,1.0,'unidade');itemDetails.add(a);calculatedTotalCals+=a.calories;}}
   }
 
   if(rawParts.length==1 && parsedFoods.length<=1){
     final tokens=normalized.split(' ').where((w)=>w.isNotEmpty && !commonUnits.contains(w) && double.tryParse(w)==null).toList();
-    if(tokens.length>1){
-      itemDetails.clear(); parsedFoods.clear(); calculatedTotalCals=0;
-      for(final food in tokens){parsedFoods.add(food);final a=_analyzeItem(food,1.0,'unidade');itemDetails.add(a);calculatedTotalCals+=a.calories;}
-    }
+    if(tokens.length>1){itemDetails.clear(); parsedFoods.clear(); calculatedTotalCals=0; for(final food in tokens){parsedFoods.add(food);final a=_analyzeItem(food,1.0,'unidade');itemDetails.add(a);calculatedTotalCals+=a.calories;}}
   }
 
   final catalog=_feedbackByCanonical[_canonical(parsedFoods.join(' '))];
-  if(catalog!=null){
-    return MealAnalysisReport(overallTitle:catalog.title,overallStatus:catalog.status,overallBody:catalog.body,improvement:catalog.improvement,itemDetails:itemDetails,totalCalories:calories??calculatedTotalCals);
-  }
+  if(catalog!=null){return MealAnalysisReport(overallTitle:catalog.title,overallStatus:catalog.status,overallBody:catalog.body,improvement:catalog.improvement,itemDetails:itemDetails,totalCalories:calories??calculatedTotalCals);}
 
   final hasProcessed=itemDetails.any((i)=>i.isWarning),hasProtein=itemDetails.any((i)=>i.type=='protein'),hasCarb=itemDetails.any((i)=>i.type=='carb'),hasFiber=itemDetails.any((i)=>i.type=='fiber');
   String title,status,body,improvement;
