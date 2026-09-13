@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class MealItemAnalysis {
   final String name;
   final String foodName;
