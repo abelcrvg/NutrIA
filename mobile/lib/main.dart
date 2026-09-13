@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_config.dart';
 import 'theme.dart';
 import 'pages/auth_gate.dart';
