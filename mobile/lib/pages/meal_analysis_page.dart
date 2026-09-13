@@ -20,7 +20,10 @@ class MealAnalysisPage extends StatelessWidget {
         'user_id': user.id,
         'meal_type': mealType,
         'meal_name': mealName,
-        'calories': report.totalCalories.toDouble(),
+        'calories': report.totalCalories.round(),
+        'carbs_g': report.carbs,
+        'protein_g': report.protein,
+        'fat_g': report.fat,
         'source': 'manual',
         'ingredients': report.itemDetails.map((item) => {
           'name': item.foodName, 'type': item.type, 'is_warning': item.isWarning,
