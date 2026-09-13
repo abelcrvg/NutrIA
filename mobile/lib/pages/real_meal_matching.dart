@@ -20,9 +20,13 @@ const _realMeals = <RealMealDefinition>[
 String _normalizeRealText(String input) {
   var value = normalizeMealText(input).replaceAll('_',' ');
   const fillers = ['comi','comei','comer','comendo','hoje','ontem','agora','no almoco','no jantar','no lanche','no cafe da manha','de manha','a tarde','a noite','tomei','bebi'];
-  for (final filler in fillers) value = value.replaceAll(RegExp('\\b${RegExp.escape(filler)}\\b'), ' ');
+  for (final filler in fillers) {
+    value = value.replaceAll(RegExp('\\b${RegExp.escape(filler)}\\b'), ' ');
+  }
   const aliases = {'x tudo':'x_tudo','x-tudo':'x_tudo','x tudo completo':'x_tudo','x-tudo completo':'x_tudo','fritas':'batata_frita','batata frita':'batata_frita','coca':'coca_cola','coca cola':'coca_cola','coca-cola':'coca_cola','coca zero':'coca_cola_zero','coca cola zero':'coca_cola_zero','coca-cola zero':'coca_cola_zero'};
-  for (final entry in aliases.entries) value = value.replaceAll(entry.key,' ${entry.value} ');
+  for (final entry in aliases.entries) {
+    value = value.replaceAll(entry.key,' ${entry.value} ');
+  }
   value = value.replaceAll(RegExp(r'\\b(um|uma|uns|umas)\\b'),' ');
   return value.replaceAll(RegExp(r'\\s+'),' ').trim();
 }
@@ -31,13 +35,25 @@ List<String> _recognizedEntities(String input) {
   final normalized = _normalizeRealText(input);
   final entities = <String>[];
   for (final meal in _realMeals) {
-    if (meal.aliases.any((alias) => normalized.contains(_normalizeRealText(alias)))) entities.add(meal.id);
+    if (meal.aliases.any((alias) => normalized.contains(_normalizeRealText(alias)))) {
+      entities.add(meal.id);
+    }
   }
-  if (normalized.contains('x_tudo')) entities.add('x_tudo');
-  if (normalized.contains('batata_frita')) entities.add('batata_frita');
-  if (normalized.contains('coca_cola_zero')) entities.add('coca_cola_zero');
-  if (normalized.contains('coca_cola')) entities.add('coca_cola');
-  if (normalized.contains('refrigerante')) entities.add('refrigerante');
+  if (normalized.contains('x_tudo')) {
+    entities.add('x_tudo');
+  }
+  if (normalized.contains('batata_frita')) {
+    entities.add('batata_frita');
+  }
+  if (normalized.contains('coca_cola_zero')) {
+    entities.add('coca_cola_zero');
+  }
+  if (normalized.contains('coca_cola')) {
+    entities.add('coca_cola');
+  }
+  if (normalized.contains('refrigerante')) {
+    entities.add('refrigerante');
+  }
   return entities.toSet().toList();
 }
 
@@ -64,7 +80,9 @@ MealAnalysisReport? findRealMealAnalysis(String input, num? calories) {
   if (entities.isEmpty) return null;
   for (final meal in _realMeals) {
     final matched = meal.components.every(entities.contains) && meal.components.length == entities.length;
-    if (!matched) continue;
+    if (!matched) {
+      continue;
+    }
     final items = meal.components.map(_realComponent).toList();
     final total = items.fold<double>(0,(sum,item)=>sum+item.calories);
     return MealAnalysisReport(overallTitle:meal.feedback.title,overallStatus:meal.feedback.status,overallBody:meal.feedback.body,improvement:meal.feedback.improvement,itemDetails:items,totalCalories:calories??total,protein:items.fold<double>(0,(s,i)=>s+i.protein),carbs:items.fold<double>(0,(s,i)=>s+i.carbs),fat:items.fold<double>(0,(s,i)=>s+i.fat),fiber:items.fold<double>(0,(s,i)=>s+i.fiber));
