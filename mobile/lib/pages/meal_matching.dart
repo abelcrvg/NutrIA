@@ -98,8 +98,14 @@ MealAnalysisReport findMealAnalysisSmart(String input, num? calories) {
     final qty=numberIndex>=0?double.parse(words[numberIndex]):1.0;
     final unit=numberIndex>=0&&numberIndex+1<words.length&&units.contains(words[numberIndex+1])?words[numberIndex+1]:'unidade';
     final foods=words.where((w)=>(numberIndex<0||w!=words[numberIndex])&&!units.contains(w)).toList();
-    for(final food in foods){items.add(analyzeFoodItem(food,foods.length==1?qty:1,foods.length==1?unit:'unidade'));}
+    for(final food in foods){
+      items.add(analyzeFoodItem(food,foods.length==1?qty:1,foods.length==1?unit:'unidade'));
+    }
   }
-  if(items.isEmpty){for(final food in normalized.split(' ').where((w)=>w.isNotEmpty&&!units.contains(w))) items.add(analyzeFoodItem(food,1,'unidade'));}
+  if(items.isEmpty){
+    for (final food in normalized.split(' ').where((w) => w.isNotEmpty && !units.contains(w))) {
+      items.add(analyzeFoodItem(food, 1, 'unidade'));
+    }
+  }
   return reportFromItems(input,items,calories);
 }
