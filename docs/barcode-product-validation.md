@@ -2,43 +2,59 @@
 
 ## Objetivo
 
-Permitir que o usuário registre alimentos industrializados pelo código de barras sem depender de cadastro manual completo. Quando o produto não estiver no catálogo, o usuário envia uma foto da tabela nutricional para que o NutrIA extraia, valide e apresente os dados para confirmação.
+Permitir que o usuário registre alimentos industrializados pelo código de barras. O catálogo oficial só deve conter dados considerados validados pelo NutrIA.
 
-## Fluxo
+## Fluxo do usuário
 
 1. Usuário abre **Escanear produto**.
 2. O app lê o EAN/GTIN pela câmera.
 3. O NutrIA procura primeiro o código no catálogo próprio.
-4. Se houver produto **validado**, seus dados são exibidos para confirmação e uso na refeição.
+4. Se houver produto `validated`, seus dados são exibidos para confirmação e uso na refeição.
 5. Se não houver produto validado, o app solicita uma foto clara da tabela nutricional da embalagem.
-6. A camada de OCR/IA extrai os campos disponíveis.
+6. OCR/IA extrai os campos disponíveis e sugere os dados estruturados.
 7. O sistema executa validações de consistência, incluindo unidades, porção e coerência energética/macronutrientes.
-8. O usuário revisa e confirma os dados.
-9. A submissão fica registrada como **pendente** até validação.
-10. Somente produtos aprovados entram no catálogo compartilhado como `validated`.
+8. O usuário confere os dados extraídos e envia a submissão.
+9. A submissão fica `pending` e não altera o catálogo oficial.
+10. Um administrador revisa a foto e os dados no painel web.
+11. O administrador pode corrigir os campos, adicionar observações, aprovar ou rejeitar.
+12. Somente após aprovação o produto entra no catálogo compartilhado como `validated`.
 
-## Dados principais
+## Separação entre submissão e catálogo
 
-`product_catalog` guarda o produto e seu estado de validação.
+`product_submissions` é a área de evidência e revisão. Ela contém o EAN, a foto da tabela, os dados extraídos e o estado da análise.
 
-`product_submissions` guarda a evidência enviada pelo usuário (foto), dados extraídos e histórico da submissão.
+`product_catalog` representa o catálogo oficial consumido pelo aplicativo. Dados enviados por usuários não devem ser tratados como oficiais até a aprovação administrativa.
 
-Status do produto:
+## Estados
 
-- `pending`: recebido, ainda não validado;
-- `validated`: disponível para uso no catálogo;
-- `rejected`: não aprovado.
+- `pending`: aguardando revisão;
+- `validated`: aprovado e disponível para o catálogo;
+- `rejected`: recusado;
+- o produto pode ser posteriormente revisado ou atualizado pelo fluxo administrativo.
 
-## Segurança
+## Painel administrativo
 
-- Cada submissão pertence ao usuário autenticado que a enviou.
-- Usuários autenticados podem consultar produtos validados e suas próprias submissões.
-- A foto da tabela deve ficar em Storage com acesso controlado; o caminho do arquivo é registrado na submissão.
-- A informação extraída pela IA não deve ser tratada como verdade clínica sem confirmação/validação.
+O painel web é separado do aplicativo mobile. Operadores autorizados poderão:
+
+- visualizar submissões pendentes;
+- ampliar e conferir a foto da tabela nutricional;
+- revisar os dados extraídos pela IA/OCR;
+- editar valores e unidades;
+- registrar observações;
+- aprovar ou rejeitar;
+- pesquisar produtos por EAN, nome e marca;
+- consultar o catálogo validado;
+- acompanhar histórico e estatísticas de submissões.
+
+A autorização administrativa usa `profiles.is_admin` e as políticas RLS do Supabase. O navegador nunca deve receber `service_role` ou outra chave secreta.
+
+## Evidência e qualidade
+
+A foto da tabela nutricional é a evidência principal para novos produtos. A IA serve para acelerar a leitura e estruturação, mas não é a autoridade final. A aprovação humana é responsável por confirmar os dados que entrarão no catálogo oficial.
 
 ## Integração com o diário alimentar
 
-O código de barras identifica o produto, mas não substitui o motor de análise do NutrIA. Um produto industrializado pode ser combinado com alimentos do catálogo e participar da análise completa da refeição.
+O código de barras identifica o produto, mas não substitui o motor de análise do NutrIA. Um produto industrializado pode ser combinado com alimentos e pratos do catálogo e participar da análise completa da refeição.
 
 Exemplo:
 
@@ -53,5 +69,6 @@ Exemplo:
 5. Criar Edge Function para OCR/estruturação dos dados.
 6. Implementar validações automáticas.
 7. Criar tela de confirmação pelo usuário.
-8. Implementar processo de aprovação/rejeição do catálogo.
-9. Integrar uma base externa de produtos para ampliar a cobertura, sem substituir o catálogo validado do NutrIA.
+8. Implementar painel administrativo web.
+9. Implementar aprovação/rejeição e publicação no catálogo.
+10. Integrar uma base externa de produtos para ampliar a cobertura, sem substituir o catálogo validado do NutrIA.
