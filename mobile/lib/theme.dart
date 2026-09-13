@@ -16,21 +16,26 @@ class NutriTheme {
       visualDensity: VisualDensity.adaptivePlatformDensity,
       appBarTheme: const AppBarTheme(backgroundColor: cream, elevation: 0, centerTitle: false),
       cardTheme: CardThemeData(elevation: 0, margin: EdgeInsets.zero, color: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22))),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true, fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: scheme.outlineVariant)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: green, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.redAccent)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.redAccent, width: 1.5)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      ),
+      inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: scheme.outlineVariant)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: green, width: 1.5)), errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.redAccent)), focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.redAccent, width: 1.5)), contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16)),
       filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), textStyle: const TextStyle(fontWeight: FontWeight.w700))),
       outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
       chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), side: BorderSide(color: scheme.outlineVariant), backgroundColor: Colors.white),
-      navigationBarTheme: NavigationBarThemeData(height: 72, elevation: 0, backgroundColor: Colors.white, indicatorColor: mint, labelTextStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
+      navigationBarTheme: const NavigationBarThemeData(height: 72, elevation: 0, backgroundColor: Colors.white, indicatorColor: mint, labelTextStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: green, foregroundColor: Colors.white, elevation: 3),
     );
+  }
+}
+
+IconData feedbackIcon(String status) {
+  switch (status) {
+    case 'positive':
+      return Icons.check_circle_outline;
+    case 'attention':
+      return Icons.info_outline;
+    case 'important':
+      return Icons.warning_amber_outlined;
+    default:
+      return Icons.auto_awesome_outlined;
   }
 }
 
@@ -39,11 +44,7 @@ class NutrIABadge extends StatelessWidget {
   final IconData icon;
   const NutrIABadge({super.key, required this.text, this.icon = Icons.auto_awesome});
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: BoxDecoration(color: NutriTheme.mint, borderRadius: BorderRadius.circular(30)),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 16, color: NutriTheme.green), const SizedBox(width: 7), Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: NutriTheme.green))]),
-  );
+  Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: NutriTheme.mint, borderRadius: BorderRadius.circular(30)), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 16, color: NutriTheme.green), const SizedBox(width: 7), Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: NutriTheme.green))]));
 }
 
 class NutrIACard extends StatelessWidget {
