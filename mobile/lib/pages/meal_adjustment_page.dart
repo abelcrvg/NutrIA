@@ -2,299 +2,32 @@ import 'package:flutter/material.dart';
 import '../models/meal_feedback.dart';
 import '../theme.dart';
 import 'meal_analysis_page.dart';
+import 'meal_matching.dart';
 
 class MealAdjustmentPage extends StatefulWidget {
   final String mealName, mealType;
   final List<MealItemAnalysis> items;
-
-  const MealAdjustmentPage({
-    super.key,
-    required this.mealName,
-    required this.mealType,
-    required this.items,
-  });
-
-  @override
-  State<MealAdjustmentPage> createState() => _MealAdjustmentPageState();
+  const MealAdjustmentPage({super.key,required this.mealName,required this.mealType,required this.items});
+  @override State<MealAdjustmentPage> createState()=>_MealAdjustmentPageState();
 }
 
-class _MealAdjustmentPageState extends State<MealAdjustmentPage> {
-  late List<Map<String, dynamic>> _adjustableItems;
-  late List<TextEditingController> _quantityControllers;
-
-  @override
-  void initState() {
-    super.initState();
-    _adjustableItems = widget.items.map((item) {
-      String defaultUnit = 'unidade';
-      if (item.unitWeights.isNotEmpty) {
-        defaultUnit = item.unitWeights.keys.first;
-      }
-      return {
-        'analysis': item,
-        'quantity': 1.0,
-        'unit': defaultUnit,
-      };
-    }).toList();
-    _quantityControllers = List.generate(
-      _adjustableItems.length,
-      (_) => TextEditingController(text: '1'),
-    );
-  }
-
-  @override
-  void dispose() {
-    for (final controller in _quantityControllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  double _calculateTotalCalories() {
-    double total = 0;
-    for (var item in _adjustableItems) {
-      final analysis = item['analysis'] as MealItemAnalysis;
-      final qty = item['quantity'] as double;
-      final unit = item['unit'] as String;
-      final weightPerUnit = analysis.unitWeights[unit] ?? 1.0;
-      final totalGrams = qty * weightPerUnit;
-      total += (totalGrams * analysis.caloriesPer100g) / 100;
-    }
-    return total;
-  }
-
-  void _setQuantity(int index, double value) {
-    final quantity = value.clamp(0.5, 99.0).toDouble();
-    setState(() {
-      _adjustableItems[index]['quantity'] = quantity;
-      _quantityControllers[index].text = quantity % 1 == 0
-          ? quantity.toStringAsFixed(0)
-          : quantity.toStringAsFixed(1);
-      _quantityControllers[index].selection = TextSelection.collapsed(
-        offset: _quantityControllers[index].text.length,
-      );
-    });
-  }
-
-  void _changeQuantity(int index, double delta) {
-    final current = _adjustableItems[index]['quantity'] as double;
-    _setQuantity(index, current + delta);
-  }
-
-  void _removeItem(int index) {
-    final controller = _quantityControllers.removeAt(index);
-    controller.dispose();
-    setState(() => _adjustableItems.removeAt(index));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final totalCals = _calculateTotalCalories();
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ajustar Porções')),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: _adjustableItems.length,
-                itemBuilder: (context, index) {
-                  final item = _adjustableItems[index];
-                  final analysis = item['analysis'] as MealItemAnalysis;
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      analysis.foodName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      analysis.name,
-                                      style: Theme.of(context).textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: 'Remover alimento',
-                                icon: const Icon(
-                                  Icons.remove_circle_outline,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () => _removeItem(index),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 72,
-                                child: TextField(
-                                  controller: _quantityControllers[index],
-                                  keyboardType: const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Qtd.',
-                                    border: OutlineInputBorder(),
-                                    isDense: true,
-                                  ),
-                                  onChanged: (value) {
-                                    final parsed = double.tryParse(
-                                      value.replaceAll(',', '.'),
-                                    );
-                                    if (parsed != null && parsed > 0) {
-                                      _adjustableItems[index]['quantity'] = parsed;
-                                      setState(() {});
-                                    }
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Container(
-                                height: 48,
-                                width: 36,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Theme.of(context).dividerColor,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                      child: IconButton(
-                                        padding: EdgeInsets.zero,
-                                        tooltip: 'Aumentar quantidade',
-                                        icon: const Icon(Icons.keyboard_arrow_up, size: 20),
-                                        onPressed: () => _changeQuantity(index, 0.5),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: IconButton(
-                                        padding: EdgeInsets.zero,
-                                        tooltip: 'Diminuir quantidade',
-                                        icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-                                        onPressed: () => _changeQuantity(index, -0.5),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: item['unit'],
-                                  isExpanded: true,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Unidade',
-                                    border: OutlineInputBorder(),
-                                    isDense: true,
-                                  ),
-                                  items: analysis.unitWeights.keys
-                                      .map(
-                                        (u) => DropdownMenuItem(
-                                          value: u,
-                                          child: Text(
-                                            u,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: (v) {
-                                    if (v != null) {
-                                      setState(() => item['unit'] = v);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest
-                    .withValues(alpha: .3),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total Estimado:',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        '${totalCals.toStringAsFixed(0)} kcal',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: NutriTheme.green,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MealAnalysisPage(
-                              mealName: widget.mealName,
-                              mealType: widget.mealType,
-                              calories: totalCals,
-                            ),
-                          ),
-                        );
-                      },
-                      child: const Text('Ver Análise Final'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class _MealAdjustmentPageState extends State<MealAdjustmentPage>{
+  late List<Map<String,dynamic>> _items;
+  late List<TextEditingController> _controllers;
+  @override void initState(){super.initState();_items=widget.items.map((i){final unit=i.unitWeights.isEmpty?'unidade':i.unitWeights.keys.first;return {'analysis':i,'quantity':1.0,'unit':unit};}).toList();_controllers=List.generate(_items.length,(_)=>TextEditingController(text:'1'));}
+  @override void dispose(){for(final c in _controllers)c.dispose();super.dispose();}
+  void _setQuantity(int index,double value){final q=value.clamp(0.5,99.0).toDouble();setState((){final item=_items[index];final analysis=item['analysis'] as MealItemAnalysis;final unit=item['unit'] as String;item['quantity']=q;item['analysis']=analyzeFoodItem(analysis.foodName,q,unit);_controllers[index].text=q%1==0?q.toStringAsFixed(0):q.toStringAsFixed(1);_controllers[index].selection=TextSelection.collapsed(offset:_controllers[index].text.length);});}
+  void _changeQuantity(int index,double delta){_setQuantity(index,(_items[index]['quantity'] as double)+delta);}
+  void _changeUnit(int index,String unit){setState((){final item=_items[index];item['unit']=unit;final a=item['analysis'] as MealItemAnalysis;item['analysis']=analyzeFoodItem(a.foodName,item['quantity'] as double,unit);});}
+  void _remove(int index){final c=_controllers.removeAt(index);c.dispose();setState(()=>_items.removeAt(index));}
+  Future<void> _editFood(int index) async {
+    final current=(_items[index]['analysis'] as MealItemAnalysis).foodName;
+    final controller=TextEditingController(text:current);
+    final selected=await showDialog<String>(context:context,builder:(context){String query=current;return StatefulBuilder(builder:(context,setDialogState){final matches=availableFoodNames.where((f)=>normalizeMealText(f).contains(normalizeMealText(query))).take(8).toList();return AlertDialog(title:const Text('Editar alimento'),content:SizedBox(width:420,child:Column(mainAxisSize:MainAxisSize.min,children:[TextField(controller:controller,autofocus:true,onChanged:(v)=>setDialogState(()=>query=v),decoration:const InputDecoration(labelText:'Nome do alimento',prefixIcon:Icon(Icons.search),border:OutlineInputBorder())),const SizedBox(height:10),if(matches.isEmpty)const Align(alignment:Alignment.centerLeft,child:Text('Nenhum alimento do catálogo encontrado.')),if(matches.isNotEmpty)Flexible(child:ListView.builder(shrinkWrap:true,itemCount:matches.length,itemBuilder:(_,i)=>ListTile(leading:const Icon(Icons.restaurant_outlined),title:Text(matches[i]),onTap:()=>Navigator.pop(context,matches[i]))))])),actions:[TextButton(onPressed:()=>Navigator.pop(context),child:const Text('Cancelar')),FilledButton(onPressed:controller.text.trim().isEmpty?null:()=>Navigator.pop(context,controller.text.trim()),child:const Text('Usar nome'))]});});controller.dispose();if(selected==null||!mounted)return;final old=_items[index]['analysis'] as MealItemAnalysis;final unit=_items[index]['unit'] as String;final qty=_items[index]['quantity'] as double;setState(()=>_items[index]['analysis']=analyzeFoodItem(selected,qty,unit));}
+  double get _totalCalories=>_items.fold(0.0,(s,item)=>s+(item['analysis'] as MealItemAnalysis).calories);
+  double get _protein=>_items.fold(0.0,(s,item)=>s+(item['analysis'] as MealItemAnalysis).protein);
+  double get _carbs=>_items.fold(0.0,(s,item)=>s+(item['analysis'] as MealItemAnalysis).carbs);
+  double get _fat=>_items.fold(0.0,(s,item)=>s+(item['analysis'] as MealItemAnalysis).fat);
+  double get _fiber=>_items.fold(0.0,(s,item)=>s+(item['analysis'] as MealItemAnalysis).fiber);
+  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Ajustar Porções')),body:SafeArea(child:Column(children:[Expanded(child:ListView.builder(padding:const EdgeInsets.all(20),itemCount:_items.length,itemBuilder:(context,index){final item=_items[index];final a=item['analysis'] as MealItemAnalysis;final qty=item['quantity'] as double;final unit=item['unit'] as String;final step=portionStep(unit);return Card(margin:const EdgeInsets.only(bottom:12),child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(a.foodName,style:const TextStyle(fontWeight:FontWeight.bold,fontSize:16)),const SizedBox(height:2),Text('${a.calories.toStringAsFixed(0)} kcal • ${a.protein.toStringAsFixed(1)} g proteína',style:Theme.of(context).textTheme.bodySmall)])),IconButton(tooltip:'Editar alimento',icon:const Icon(Icons.edit_outlined),onPressed:()=>_editFood(index)),IconButton(tooltip:'Remover alimento',icon:const Icon(Icons.remove_circle_outline,color:Colors.red),onPressed:()=>_remove(index))]),const SizedBox(height:12),Row(children:[SizedBox(width:76,child:TextField(controller:_controllers[index],keyboardType:const TextInputType.numberWithOptions(decimal:true),textAlign:TextAlign.center,decoration:const InputDecoration(labelText:'Qtd.',border:OutlineInputBorder(),isDense:true),onChanged:(v){final p=double.tryParse(v.replaceAll(',','.'));if(p!=null&&p>0){_items[index]['quantity']=p;final old=_items[index]['analysis'] as MealItemAnalysis;_items[index]['analysis']=analyzeFoodItem(old.foodName,p,unit);setState((){});}})),const SizedBox(width:4),Container(height:48,width:36,decoration:BoxDecoration(border:Border.all(color:Theme.of(context).dividerColor),borderRadius:BorderRadius.circular(8)),child:Column(children:[Expanded(child:IconButton(padding:EdgeInsets.zero,tooltip:'Aumentar',icon:const Icon(Icons.keyboard_arrow_up,size:20),onPressed:()=>_changeQuantity(index,step))),Expanded(child:IconButton(padding:EdgeInsets.zero,tooltip:'Diminuir',icon:const Icon(Icons.keyboard_arrow_down,size:20),onPressed:()=>_changeQuantity(index,-step)))])),const SizedBox(width:8),Expanded(child:DropdownButtonFormField<String>(initialValue:unit,isExpanded:true,decoration:const InputDecoration(labelText:'Unidade',border:OutlineInputBorder(),isDense:true),items:a.unitWeights.keys.map((u)=>DropdownMenuItem(value:u,child:Text(u,overflow:TextOverflow.ellipsis))).toList(),onChanged:(v){if(v!=null)_changeUnit(index,v);}))]),const SizedBox(height:10),Wrap(spacing:10,runSpacing:4,children:[Text('${a.carbs.toStringAsFixed(1)} g carboidratos',style:Theme.of(context).textTheme.bodySmall),Text('${a.fat.toStringAsFixed(1)} g gorduras',style:Theme.of(context).textTheme.bodySmall),Text('${a.fiber.toStringAsFixed(1)} g fibras',style:Theme.of(context).textTheme.bodySmall)])])));}),),Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(color:Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha:.3),borderRadius:const BorderRadius.vertical(top:Radius.circular(24))),child:Column(children:[Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[const Text('Total Estimado:',style:TextStyle(fontSize:16,fontWeight:FontWeight.w600)),Text('${_totalCalories.toStringAsFixed(0)} kcal',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.w900,color:NutriTheme.green))]),const SizedBox(height:10),Wrap(alignment:WrapAlignment.center,spacing:14,runSpacing:4,children:[Text('P ${_protein.toStringAsFixed(1)}g'),Text('C ${_carbs.toStringAsFixed(1)}g'),Text('G ${_fat.toStringAsFixed(1)}g'),Text('F ${_fiber.toStringAsFixed(1)}g')]),const SizedBox(height:16),SizedBox(width:double.infinity,child:FilledButton(onPressed:_items.isEmpty?null:(){final finalItems=_items.map((e)=>e['analysis'] as MealItemAnalysis).toList();Navigator.push(context,MaterialPageRoute(builder:(_)=>MealAnalysisPage(mealName:widget.mealName,mealType:widget.mealType,items:finalItems,calories:_totalCalories)));},child:const Text('Ver Análise Final')))]))])));
 }
